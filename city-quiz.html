@@ -195,6 +195,13 @@
             color: white;
         }
 
+        /* 新增：未答出的城市样式 */
+        .city-tag.unfilled {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+        }
+
         /* 输入栏区域 - 移除联想相关样式 */
         .input-section-container {
             position: sticky;
@@ -593,7 +600,7 @@
     <div class="input-section-container">
         <div class="input-section">
             <div class="input-wrapper">
-                <input type="text" id="city-input" placeholder="输入地级市名称（支持简写，如：北京、香港、海南等）" autocomplete="off">
+                <input type="text" id="city-input" placeholder="输入地级市名称（支持简写，如：北京、香港等）" autocomplete="off">
             </div>
             <div class="button-group">
                 <button id="submit-btn" class="btn btn-submit">提交答案</button>
@@ -769,7 +776,19 @@
                 
                 cities.forEach(city => {
                     const cityTag = document.createElement('div');
-                    cityTag.className = `city-tag ${filledCities.has(city) ? 'filled' : ''}`;
+                    
+                    // 如果游戏已结束，显示所有城市
+                    if (isGameEnded) {
+                        if (filledCities.has(city)) {
+                            cityTag.className = 'city-tag filled';
+                        } else {
+                            cityTag.className = 'city-tag unfilled';
+                        }
+                    } else {
+                        // 游戏进行中，只显示已答出的城市
+                        cityTag.className = `city-tag ${filledCities.has(city) ? 'filled' : ''}`;
+                    }
+                    
                     cityTag.textContent = city;
                     cityTags.appendChild(cityTag);
                 });
@@ -981,28 +1000,28 @@
             }, 1000);
         }
 
-        // 模糊匹配函数：处理“广州”与“广州市”的匹配
+        // 模糊匹配函数：处理"广州"与"广州市"的匹配
         // 修正：精准匹配 JSON 中的城市名规则
-function findAccuracy(cityName) {
-    // 步骤1：先定义「仅移除市后缀」的归一化规则（适配 JSON 里“广州”对应系统内“广州市”）
-    const normalizeForCity = (name) => {
-        // 仅移除“市”后缀（因为 JSON 里市结尾的都省略了市）
-        if (name.endsWith('市')) {
-            return name.slice(0, -1); // 广州市 → 广州
-        }
-        // 非市结尾的（如澳门特别行政区、呼和浩特），直接返回原名称
-        return name;
-    };
+        function findAccuracy(cityName) {
+            // 步骤1：先定义「仅移除市后缀」的归一化规则（适配 JSON 里"广州"对应系统内"广州市"）
+            const normalizeForCity = (name) => {
+                // 仅移除"市"后缀（因为 JSON 里市结尾的都省略了市）
+                if (name.endsWith('市')) {
+                    return name.slice(0, -1); // 广州市 → 广州
+                }
+                // 非市结尾的（如澳门特别行政区、呼和浩特），直接返回原名称
+                return name;
+            };
 
-    // 步骤2：系统内城市名归一化（如广州市 → 广州，澳门特别行政区 → 澳门特别行政区）
-    const normalizedSysCity = normalizeForCity(cityName);
-    
-    // 步骤3：遍历 JSON 数据匹配
-    return accuracyData.find(item => {
-        // JSON 里的 city_name 本身就是归一化后的（广州/澳门特别行政区），直接全等匹配
-        return item.city_name === normalizedSysCity;
-    });
-}
+            // 步骤2：系统内城市名归一化（如广州市 → 广州，澳门特别行政区 → 澳门特别行政区）
+            const normalizedSysCity = normalizeForCity(cityName);
+            
+            // 步骤3：遍历 JSON 数据匹配
+            return accuracyData.find(item => {
+                // JSON 里的 city_name 本身就是归一化后的（广州/澳门特别行政区），直接全等匹配
+                return item.city_name === normalizedSysCity;
+            });
+        }
 
         // 正态分布累积分布函数近似值 (CDF)
         function calculateNormalCDF(z) {
@@ -1017,6 +1036,9 @@ function findAccuracy(cityName) {
             if (isGameEnded) return;
             isGameEnded = true;
             clearInterval(timerInterval);
+            
+            // 更新省份列表，显示所有城市（包括未答出的）
+            renderProvinceList();
             
             // 原有正确率计算
             const totalCities = 390;
@@ -1083,7 +1105,7 @@ function findAccuracy(cityName) {
             const finalStats = document.getElementById('final-stats');
             finalStats.innerHTML = `
                 <div style="font-size: 1.4rem; margin-bottom:10px;">你的得分: <span class="highlight-val">${score}</span></div>
-                <div class="stat-detail">全网挑战者平均期望分: <span class="highlight-val">${expectedValue.toFixed(2)}</span></div>
+                <div class="stat-detail">全网挑战者平均分: <span class="highlight-val">${expectedValue.toFixed(2)}</span></div>
                 <div class="stat-detail">你的表现超过了全网 <span class="highlight-val">${percentile.toFixed(1)}%</span> 的用户</div>
             `;
 
@@ -1096,58 +1118,58 @@ function findAccuracy(cityName) {
 
         // 渲染城市正确率列表
         // 完整实现：渲染城市正确率列表 + 正确匹配已填写城市
-function renderCityAccuracyList() {
-    const listContainer = document.getElementById('city-stats-list');
-    // 清空原有内容（保留标题）
-    listContainer.innerHTML = '<h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: #2c3e50;">全网城市识别热度榜（绿色为您答对）</h3>';
+        function renderCityAccuracyList() {
+            const listContainer = document.getElementById('city-stats-list');
+            // 清空原有内容（保留标题）
+            listContainer.innerHTML = '<h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: #2c3e50;">全网城市识别热度榜（绿色为您答对）</h3>';
 
-    // 按正确率降序排序
-    const sortedAccuracy = [...accuracyData].sort((a, b) => b.correct_percent - a.correct_percent);
+            // 按正确率降序排序
+            const sortedAccuracy = [...accuracyData].sort((a, b) => b.correct_percent - a.correct_percent);
 
-    sortedAccuracy.forEach(item => {
-        // 步骤1：反向推导系统内的城市名（JSON里的city_name → 系统内的完整名）
-        let sysCityName = item.city_name;
-        // 如果 JSON 里的名称不是“特别行政区/自治州/地区/盟/林区”结尾，且不含“市”，则补“市”
-        const fullSuffixes = ['特别行政区', '自治州', '地区', '盟', '林区'];
-        const isFullName = fullSuffixes.some(suffix => sysCityName.endsWith(suffix));
-        if (!isFullName && !sysCityName.includes('市')) {
-            sysCityName += '市'; // 广州 → 广州市
+            sortedAccuracy.forEach(item => {
+                // 步骤1：反向推导系统内的城市名（JSON里的city_name → 系统内的完整名）
+                let sysCityName = item.city_name;
+                // 如果 JSON 里的名称不是"特别行政区/自治州/地区/盟/林区"结尾，且不含"市"，则补"市"
+                const fullSuffixes = ['特别行政区', '自治州', '地区', '盟', '林区'];
+                const isFullName = fullSuffixes.some(suffix => sysCityName.endsWith(suffix));
+                if (!isFullName && !sysCityName.includes('市')) {
+                    sysCityName += '市'; // 广州 → 广州市
+                }
+
+                // 步骤2：判断用户是否填写过该城市
+                const isAnsweredCorrectly = filledCities.has(sysCityName);
+
+                // 步骤3：创建行元素
+                const row = document.createElement('div');
+                row.className = 'city-stat-row';
+
+                // 城市名称列
+                const cityNameCol = document.createElement('div');
+                cityNameCol.className = 'city-name';
+                cityNameCol.textContent = item.city_name; // 显示 JSON 里的名称（广州/澳门特别行政区）
+
+                // 进度条容器
+                const barContainer = document.createElement('div');
+                barContainer.className = 'bar-container';
+
+                // 进度条填充（绿色=答对，红色=答错/未答）
+                const barFill = document.createElement('div');
+                barFill.className = `bar-fill ${isAnsweredCorrectly ? 'correct' : ''}`;
+                barFill.style.width = `${item.correct_percent}%`;
+
+                // 百分比文本
+                const percentCol = document.createElement('div');
+                percentCol.className = 'percent-text';
+                percentCol.textContent = `${item.correct_percent}%`;
+
+                // 组装
+                barContainer.appendChild(barFill);
+                row.appendChild(cityNameCol);
+                row.appendChild(barContainer);
+                row.appendChild(percentCol);
+                listContainer.appendChild(row);
+            });
         }
-
-        // 步骤2：判断用户是否填写过该城市
-        const isAnsweredCorrectly = filledCities.has(sysCityName);
-
-        // 步骤3：创建行元素
-        const row = document.createElement('div');
-        row.className = 'city-stat-row';
-
-        // 城市名称列
-        const cityNameCol = document.createElement('div');
-        cityNameCol.className = 'city-name';
-        cityNameCol.textContent = item.city_name; // 显示 JSON 里的名称（广州/澳门特别行政区）
-
-        // 进度条容器
-        const barContainer = document.createElement('div');
-        barContainer.className = 'bar-container';
-
-        // 进度条填充（绿色=答对，红色=答错/未答）
-        const barFill = document.createElement('div');
-        barFill.className = `bar-fill ${isAnsweredCorrectly ? 'correct' : ''}`;
-        barFill.style.width = `${item.correct_percent}%`;
-
-        // 百分比文本
-        const percentCol = document.createElement('div');
-        percentCol.className = 'percent-text';
-        percentCol.textContent = `${item.correct_percent}%`;
-
-        // 组装
-        barContainer.appendChild(barFill);
-        row.appendChild(cityNameCol);
-        row.appendChild(barContainer);
-        row.appendChild(percentCol);
-        listContainer.appendChild(row);
-    });
-}
 
         // 显示提示消息
         function showMessage(text, type) {

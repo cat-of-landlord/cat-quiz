@@ -58,8 +58,22 @@
         .quiz-card.done { border-color: var(--success-color); }
         .quiz-card.missed { border-color: var(--danger-color); }
 
-        .img-container { width: 100%; aspect-ratio: 1/1; overflow: hidden; background: #f0f0f0; }
-        .quiz-img { width: 100%; height: 100%; object-fit: cover; }
+        .img-container { 
+            width: 100%; 
+            aspect-ratio: 1/1; 
+            overflow: hidden; 
+            background: #f0f0f0;
+            cursor: pointer; /* 添加鼠标手型 */
+        }
+        .quiz-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover;
+            transition: transform 0.3s ease; /* 添加悬停效果 */
+        }
+        .quiz-img:hover {
+            transform: scale(1.05); /* 悬停时稍微放大 */
+        }
 
         .card-info { padding: 10px; font-size: 0.85rem; }
         .user-ans { font-weight: bold; margin-bottom: 5px; min-height: 1.2em; }
@@ -95,6 +109,115 @@
 
         .hidden { display: none; }
         .message-tip { height: 20px; font-size: 14px; margin-top: 5px; font-weight: bold; }
+        
+        /* 新增：全屏图片查看器样式 */
+        .image-viewer-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .image-viewer-container {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .fullscreen-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            cursor: default;
+        }
+        
+        .image-viewer-info {
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.1rem;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: -40px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .image-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        
+        .image-nav:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .image-prev {
+            left: 20px;
+        }
+        
+        .image-next {
+            right: 20px;
+        }
+        
+        .image-counter {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -125,6 +248,18 @@
     </div>
     <div class="progress-container"><div id="progressBar"></div></div>
     <div id="message" class="message-tip"></div>
+</div>
+
+<!-- 新增：全屏图片查看器 -->
+<div id="imageViewer" class="image-viewer-overlay">
+    <div class="image-viewer-container">
+        <button class="close-btn" onclick="closeImageViewer()">×</button>
+        <button class="image-nav image-prev" onclick="prevImage()">‹</button>
+        <img id="fullscreenImg" class="fullscreen-image" src="" alt="">
+        <button class="image-nav image-next" onclick="nextImage()">›</button>
+        <div class="image-counter" id="imageCounter">1 / 40</div>
+        <div class="image-viewer-info" id="imageInfo"></div>
+    </div>
 </div>
 
 <!-- 图片卡片容器（必须存在，和家猫页面一致） -->
@@ -186,6 +321,13 @@
     let ended = false;
     const inputBox = document.getElementById("answerInput");
     const grid = document.getElementById("quizGrid");
+    
+    // 新增：全屏查看相关变量
+    let currentImageIndex = 0;
+    const imageViewer = document.getElementById("imageViewer");
+    const fullscreenImg = document.getElementById("fullscreenImg");
+    const imageCounter = document.getElementById("imageCounter");
+    const imageInfo = document.getElementById("imageInfo");
 
     // 初始化图片网格（核心函数，和家猫页面完全一致）
     function initGrid() {
@@ -197,7 +339,9 @@
             // 正确率进度条颜色逻辑
             const barColor = item.acc > 60 ? "#28a745" : (item.acc > 30 ? "#ffc107" : "#dc3545");
             card.innerHTML = `
-                <div class="img-container"><img src="${item.img}" class="quiz-img"></div>
+                <div class="img-container" onclick="openFullscreenImage(${index})">
+                    <img src="${item.img}" class="quiz-img">
+                </div>
                 <div class="card-info">
                     <div id="ans-text-${index}" class="user-ans">-</div>
                     <div class="acc-bar-wrap" id="acc-wrap-${index}">
@@ -210,6 +354,64 @@
         });
         updateProgress(); // 更新进度条和计数
     }
+    
+    // 新增：打开全屏图片查看器
+    function openFullscreenImage(index) {
+        currentImageIndex = index;
+        updateFullscreenImage();
+        imageViewer.style.display = "flex";
+        document.body.style.overflow = "hidden"; // 防止背景滚动
+    }
+    
+    // 新增：更新全屏图片
+    function updateFullscreenImage() {
+        const item = quizData[currentImageIndex];
+        fullscreenImg.src = item.img;
+        imageCounter.textContent = `${currentImageIndex + 1} / ${quizData.length}`;
+       
+        
+        // 添加用户是否答对的提示
+        if (userCorrectIndexes.includes(currentImageIndex)) {
+            imageInfo.innerHTML += '<span style="color: #28a745; margin-left: 10px;">✓ 已答对</span>';
+        } else if (ended) {
+            imageInfo.innerHTML += '<span style="color: #dc3545; margin-left: 10px;">✗ 未答出</span>';
+        }
+    }
+    
+    // 新增：关闭全屏图片查看器
+    function closeImageViewer() {
+        imageViewer.style.display = "none";
+        document.body.style.overflow = "auto";
+    }
+    
+    // 新增：上一张图片
+    function prevImage() {
+        currentImageIndex = (currentImageIndex - 1 + quizData.length) % quizData.length;
+        updateFullscreenImage();
+    }
+    
+    // 新增：下一张图片
+    function nextImage() {
+        currentImageIndex = (currentImageIndex + 1) % quizData.length;
+        updateFullscreenImage();
+    }
+    
+    // 新增：键盘快捷键支持
+    document.addEventListener('keydown', function(e) {
+        if (imageViewer.style.display === 'flex') {
+            switch(e.key) {
+                case 'Escape':
+                    closeImageViewer();
+                    break;
+                case 'ArrowLeft':
+                    prevImage();
+                    break;
+                case 'ArrowRight':
+                    nextImage();
+                    break;
+            }
+        }
+    });
 
     // 回车触发答题（和家猫页面完全一致）
     inputBox.addEventListener("keydown", (e) => { 
