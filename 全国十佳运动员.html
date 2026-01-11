@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>中国十佳运动员识人挑战 (2016-2025)</title>
+    <style>
+        :root {
+            --primary-color: #e60012; 
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --bg-color: #f8f9fa;
+            --gray-color: #6c757d;
+        }
+
+        body { 
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; 
+            margin: 0; padding-top: 180px; 
+            background-color: var(--bg-color); 
+        }
+
+        .header-sticky {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: white; box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 15px 20px; text-align: center;
+        }
+
+        .header-sticky h2 { margin: 0 0 10px 0; font-size: 1.4rem; color: #333; }
+        .input-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
+
+        input { 
+            padding: 12px 20px; font-size: 16px; width: 350px; 
+            border: 2px solid #ddd; border-radius: 25px; outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus { border-color: var(--primary-color); }
+
+        .progress-container {
+            max-width: 800px; margin: 5px auto; background: #eee; height: 10px; border-radius: 5px; overflow: hidden;
+        }
+        #progressBar { width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s; }
+
+        .quiz-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px; padding: 20px; max-width: 1300px; margin: 0 auto;
+        }
+
+        .quiz-card {
+            background: white; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 2px solid transparent;
+            transition: all 0.3s; text-align: center;
+        }
+        .quiz-card.done { border-color: var(--success-color); transform: translateY(-5px); }
+        .quiz-card.missed { border-color: var(--danger-color); }
+
+        .img-container { 
+            width: 100%; aspect-ratio: 3 / 4; 
+            overflow: hidden; background: #eee; cursor: pointer;
+        }
+        .quiz-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .quiz-img:hover { transform: scale(1.05); }
+
+        .card-info { padding: 10px; }
+        .hint-tag { 
+            display: inline-block; background: #f0f0f0; color: #666; 
+            font-size: 12px; padding: 2px 8px; border-radius: 10px; margin-bottom: 5px;
+        }
+        .user-ans { font-weight: bold; font-size: 0.9rem; color: #333; min-height: 1.2em; }
+
+        /* 正确率进度条 */
+        .acc-bar-wrap { height: 4px; width: 80%; background: #eee; border-radius: 2px; margin: 5px auto; display: none; }
+        .acc-bar-fill { height: 100%; border-radius: 2px; }
+
+        .result-area {
+            max-width: 800px; margin: 40px auto; background: white; 
+            padding: 30px; border-radius: 15px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .stat-box { background: #fff5f5; border: 1px solid #ffccd0; padding: 20px; border-radius: 12px; margin: 20px 0; line-height: 1.8; }
+        .stat-box span { font-weight: bold; color: var(--primary-color); font-size: 1.4rem; }
+
+        button { padding: 10px 25px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; }
+        #endBtn { background: var(--gray-color); color: white; }
+        #restartBtn { background: var(--primary-color); color: white; margin-top: 15px; }
+
+        /* 全屏查看器 */
+        .viewer-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center;
+        }
+        .viewer-img { max-width: 90%; max-height: 85vh; border-radius: 5px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="header-sticky">
+    <button style="position: absolute; top: 15px; left: 15px;" onclick="window.location.href='index.html'">← 首页</button>
+    <h2>🇨🇳 中国十佳运动员挑战 (<span id="countInfo">0/68</span>)</h2>
+    <div class="input-group">
+        <input id="answerInput" type="text" placeholder="输入运动员姓名，回车确认..." autofocus>
+        <button onclick="endQuiz()" id="endBtn">提交并查看排名</button>
+        <button onclick="location.reload()" id="restartBtn" class="hidden">重新开始</button>
+    </div>
+    <div class="progress-container"><div id="progressBar"></div></div>
+    <div id="message" style="height: 20px; font-size: 14px; margin-top: 5px; font-weight: bold;"></div>
+</div>
+
+<div id="quizGrid" class="quiz-grid"></div>
+
+<div id="resultArea" class="result-area hidden">
+    <h3>🏆 挑战报告</h3>
+    <div class="stat-box" id="statSummary"></div>
+</div>
+
+<div id="imageViewer" class="viewer-overlay" onclick="this.style.display='none'">
+    <img id="fullscreenImg" class="viewer-img" src="">
+</div>
+
+<script>
+    // 带有知名度数据（acc）的运动员列表
+    const quizData = [
+        { name: "丁宁", sport: "乒乓球", file: "丁宁.webp", acc: 75 },
+        { name: "丁立人", sport: "国际象棋", file: "丁立人.webp", acc: 38 },
+        { name: "全红婵", sport: "跳水", file: "全红婵.webp", acc: 92 },
+        { name: "冯珊珊", sport: "高尔夫", file: "冯珊珊.webp", acc: 25 },
+        { name: "刘国梁", sport: "乒乓球", file: "刘国梁.webp", acc: 90 },
+        { name: "刘清漪", sport: "霹雳舞", file: "刘清漪.webp", acc: 22 },
+        { name: "刘焕华", sport: "举重", file: "刘焕华.webp", acc: 18 },
+        { name: "刘诗雯", sport: "乒乓球", file: "刘诗雯.webp", acc: 82 },
+        { name: "吕小军", sport: "举重", file: "吕小军.webp", acc: 65 },
+        { name: "孙杨", sport: "游泳", file: "孙杨.jpg", acc: 88 },
+        { name: "孙颖莎", sport: "乒乓球", file: "孙颖莎.webp", acc: 94 },
+        { name: "宫金杰", sport: "场地自行车", file: "宫金杰.webp", acc: 28 },
+        { name: "居文君", sport: "国际象棋", file: "居文君.webp", acc: 24 },
+        { name: "巩立姣", sport: "铅球", file: "巩立姣.webp", acc: 68 },
+        { name: "张之臻", sport: "网球", file: "张之臻.webp", acc: 45 },
+        { name: "张伟丽", sport: "综合格斗", file: "张伟丽.webp", acc: 78 },
+        { name: "张雨霏", sport: "游泳", file: "张雨霏.webp", acc: 85 },
+        { name: "徐嘉余", sport: "游泳", file: "徐嘉余.webp", acc: 62 },
+        { name: "徐梦桃", sport: "自由式滑雪", file: "徐梦桃.webp", acc: 70 },
+        { name: "徐灿", sport: "拳击", file: "徐灿.jpg", acc: 32 },
+        { name: "文晓燕", sport: "残奥田径", file: "文晓燕.webp", acc: 15 },
+        { name: "施廷懋", sport: "跳水", file: "施廷懋.webp", acc: 55 },
+        { name: "易建联", sport: "篮球", file: "易建联.webp", acc: 89 },
+        { name: "朱婷", sport: "排球", file: "朱婷.webp", acc: 86 },
+        { name: "杨倩", sport: "射击", file: "杨倩.webp", acc: 76 },
+        { name: "杨家玉", sport: "竞走", file: "杨家玉.webp", acc: 35 },
+        { name: "杨洪琼", sport: "越野滑雪", file: "杨洪琼.webp", acc: 12 },
+        { name: "杨浚瑄", sport: "游泳", file: "杨浚瑄.webp", acc: 28 },
+        { name: "柯洁", sport: "围棋", file: "柯洁.webp", acc: 74 },
+        { name: "武大靖", sport: "短道速滑", file: "武大靖.webp", acc: 80 },
+        { name: "武磊", sport: "足球", file: "武磊.webp", acc: 84 },
+        { name: "汪顺", sport: "游泳", file: "汪顺.webp", acc: 72 },
+        { name: "潘展乐", sport: "游泳", file: "潘展乐.webp", acc: 88 },
+        { name: "王嘉男", sport: "跳远", file: "王嘉男.webp", acc: 34 },
+        { name: "王楚钦", sport: "乒乓球", file: "王楚钦.webp", acc: 91 },
+        { name: "王镇", sport: "竞走", file: "王镇.webp", acc: 26 },
+        { name: "王霜", sport: "足球", file: "王霜.jpg", acc: 60 },
+        { name: "盛李豪", sport: "射击", file: "盛李豪.webp", acc: 78 },
+        { name: "石宇奇", sport: "羽毛球", file: "石宇奇.webp", acc: 65 },
+        { name: "罗静", sport: "登山", file: "罗静.jpg", acc: 10 },
+        { name: "肖若腾", sport: "体操", file: "肖若腾.webp", acc: 58 },
+        { name: "胡凯", sport: "田径", file: "胡凯.webp", acc: 40 },
+        { name: "苏炳添", sport: "短跑", file: "苏炳添.webp", acc: 95 },
+        { name: "苏翊鸣", sport: "单板滑雪", file: "苏翊鸣.webp", acc: 83 },
+        { name: "董洪娟", sport: "登山", file: "董洪娟.jpg", acc: 8 },
+        { name: "蒋裕燕", sport: "残奥游泳", file: "蒋裕燕.webp", acc: 14 },
+        { name: "蔡雪桐", sport: "单板滑雪", file: "蔡雪桐.webp", acc: 20 },
+        { name: "覃海洋", sport: "游泳", file: "覃海洋.webp", acc: 75 },
+        { name: "谢震业", sport: "短跑", file: "谢震业.webp", acc: 66 },
+        { name: "谷爱凌", sport: "自由式滑雪", file: "谷爱凌.webp", acc: 93 },
+        { name: "赵帅", sport: "跆拳道", file: "赵帅.webp", acc: 42 },
+        { name: "邓智瑄", sport: "残奥田径", file: "邓智瑄.webp", acc: 11 },
+        { name: "邓薇", sport: "举重", file: "邓薇.webp", acc: 31 },
+        { name: "邓雅文", sport: "小轮车", file: "邓雅文.webp", acc: 33 },
+        { name: "邹敬园", sport: "体操", file: "邹敬园.webp", acc: 52 },
+        { name: "郑钦文", sport: "网球", file: "郑钦文.webp", acc: 94 },
+        { name: "郭川", sport: "帆船", file: "郭川.webp", acc: 38 },
+        { name: "钟天使", sport: "场地自行车", file: "钟天使.webp", acc: 41 },
+        { name: "闫子贝", sport: "游泳", file: "闫子贝.webp", acc: 25 },
+        { name: "陈梦", sport: "乒乓球", file: "陈梦.webp", acc: 87 },
+        { name: "陈艾森", sport: "跳水", file: "陈艾森.webp", acc: 48 },
+        { name: "陈芋汐", sport: "跳水", file: "陈芋汐.webp", acc: 86 },
+        { name: "陈雨菲", sport: "羽毛球", file: "陈雨菲.webp", acc: 79 },
+        { name: "隋文静", sport: "花样滑冰", file: "隋文静.webp", acc: 62 },
+        { name: "韩天宇", sport: "短道速滑", file: "韩天宇.webp", acc: 44 },
+        { name: "韩聪", sport: "花样滑冰", file: "韩聪.webp", acc: 61 },
+        { name: "马龙", sport: "乒乓球", file: "马龙.webp", acc: 96 },
+        { name: "高亭宇", sport: "速度滑冰", file: "高亭宇.webp", acc: 59 }
+    ];
+
+    let correctIndices = [];
+    let isEnded = false;
+    const input = document.getElementById("answerInput");
+
+    function init() {
+        const grid = document.getElementById("quizGrid");
+        quizData.forEach((item, i) => {
+            const card = document.createElement("div");
+            card.className = "quiz-card";
+            card.id = `card-${i}`;
+            const barColor = item.acc > 70 ? "#28a745" : (item.acc > 40 ? "#ffc107" : "#dc3545");
+            card.innerHTML = `
+                <div class="img-container" onclick="viewImg('中国十佳运动员/${item.file}')">
+                    <img src="中国十佳运动员/${item.file}" class="quiz-img">
+                </div>
+                <div class="card-info">
+                    <div class="hint-tag">${item.sport}</div>
+                    <div id="ans-${i}" class="user-ans">? ? ?</div>
+                    <div class="acc-bar-wrap" id="acc-wrap-${i}">
+                        <div class="acc-bar-fill" style="width:${item.acc}%; background:${barColor}"></div>
+                        <div style="font-size:9px; color:#999; margin-top:2px">知名度: ${item.acc}%</div>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+        updateProgress();
+    }
+
+    function viewImg(src) {
+        document.getElementById("fullscreenImg").src = src;
+        document.getElementById("imageViewer").style.display = "flex";
+    }
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !isEnded) {
+            const val = input.value.trim();
+            const idx = quizData.findIndex(d => d.name === val);
+            if (idx !== -1 && !correctIndices.includes(idx)) {
+                correctIndices.push(idx);
+                document.getElementById(`card-${idx}`).classList.add("done");
+                document.getElementById(`ans-${idx}`).innerText = val;
+                document.getElementById(`card-${idx}`).scrollIntoView({behavior:'smooth', block:'center'});
+                document.getElementById("message").innerHTML = "✅ 识别正确！";
+            } else if (idx !== -1) {
+                document.getElementById("message").innerHTML = "⚠ 已经答过了";
+            } else {
+                document.getElementById("message").innerHTML = "❌ 未匹配，请检查姓名是否正确";
+            }
+            input.value = "";
+            updateProgress();
+        }
+    });
+
+    function updateProgress() {
+        const count = correctIndices.length;
+        document.getElementById("countInfo").innerText = `${count}/${quizData.length}`;
+        document.getElementById("progressBar").style.width = `${(count/quizData.length)*100}%`;
+    }
+
+    // 统计计算逻辑
+    function calculatePercentile(score) {
+        const mean = 22.5; // 预设平均分
+        const stdDev = 12.0; 
+        const z = (score - mean) / stdDev;
+        const t = 1 / (1 + 0.2315419 * Math.abs(z));
+        const d = 0.3989423 * Math.exp(-z * z / 2);
+        let prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+        if (z > 0) prob = 1 - prob;
+        return Math.round(prob * 1000) / 10;
+    }
+
+    function endQuiz() {
+        isEnded = true;
+        input.disabled = true;
+        quizData.forEach((item, i) => {
+            document.getElementById(`acc-wrap-${i}`).style.display = "block";
+            if (!correctIndices.includes(i)) {
+                document.getElementById(`card-${i}`).classList.add("missed");
+                document.getElementById(`ans-${i}`).innerHTML = `<span style="color:var(--danger-color)">${item.name}</span>`;
+            }
+        });
+        
+        const score = correctIndices.length;
+        const percentile = calculatePercentile(score);
+        document.getElementById("statSummary").innerHTML = `
+            你认出了 <span>${score}</span> / 68 位顶级运动员！<br>
+            你的体育素养超过了全球 <span>${percentile}%</span> 的挑战者。<br>
+            全球挑战者平均分为 <span>22.5</span> 分。
+        `;
+        document.getElementById("resultArea").classList.remove("hidden");
+        document.getElementById("restartBtn").classList.remove("hidden");
+        document.getElementById("endBtn").classList.add("hidden");
+        window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+    }
+
+    init();
+</script>
+</body>
+</html>
