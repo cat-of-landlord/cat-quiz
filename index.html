@@ -51,7 +51,6 @@
             font-size: 18px;
             border-radius: 12px;
             border: none;
-            background: #007bff;
             color: white;
             cursor: pointer;
             transition: all 0.3s;
@@ -64,9 +63,10 @@
         .btn:hover {
             opacity: 0.9;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
+        /* 颜色方案 */
         .btn-cat {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
@@ -75,9 +75,14 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
         
-        /* 新增地理题目标按钮样式 */
         .btn-geo {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        /* 新增：历史人物分类按钮样式 */
+        .btn-history {
+            background: linear-gradient(135deg, #800000 0%, #cc0000 100%);
+            border: 1px solid #ffcc00; /* 增加金色边框细节 */
         }
         
         .instructions {
@@ -99,6 +104,13 @@
         <h1>📚 答题汇总系统</h1>
         
         <div class="category">
+            <h2 style="color: #cc0000; border-left-color: #cc0000;">👤 历史人物答题</h2>
+            <div class="btn-grid">
+                <a class="btn btn-history" href="共产主义战士.html">国际共产主义战士特辑</a>
+                </div>
+        </div>
+
+        <div class="category">
             <h2>🐱 猫科知识答题</h2>
             <div class="btn-grid">
                 <a class="btn btn-cat" href="家猫.html">家猫品种答题</a>
@@ -117,13 +129,10 @@
             </div>
         </div>
 
-        <!-- 新增地理题目栏目 -->
         <div class="category">
             <h2>🌍 地理知识答题</h2>
             <div class="btn-grid">
                 <a class="btn btn-geo" href="city-quiz.html">中国地级市答题</a>
-                <!-- 可按需添加更多地理相关按钮，例如： -->
-                <!-- <a class="btn btn-geo" href="province-quiz.html">省份地理答题</a> -->
             </div>
         </div>
         
@@ -132,7 +141,7 @@
             <p>1. 点击上方按钮进入对应的答题页面</p>
             <p>2. 在答题页面输入答案，按回车键确认</p>
             <p>3. 答完后点击"提交"查看成绩和排名</p>
-            <p>4. 答题过程中随时可以点击左上角的"← 首页"按钮返回</p>
+            <p>4. 答题过程中随时可以点击左上角的"← 首页"或"返回"按钮回到此处</p>
             <p>5. 所有页面都支持重新开始答题</p>
         </div>
     </div>

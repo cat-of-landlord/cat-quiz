@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>星火燎原：国际共产主义战士特辑</title>
+    <style>
+        :root {
+            --primary-red: #cc0000;
+            --gold-accent: #ffcc00;
+            --dark-bg: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-light: #f4f4f4;
+            --success-green: #28a745;
+        }
+
+        body { 
+            font-family: 'Times New Roman', 'PingFang SC', serif; 
+            margin: 0; 
+            background-color: var(--dark-bg); 
+            color: var(--text-light);
+            /* 适配缩小后的布局 */
+            padding-top: 160px; 
+        }
+
+        /* 新增：左上角返回按钮 */
+        .back-nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1100; /* 高于header */
+            padding: 8px 15px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: var(--gold-accent);
+            border: 1px solid var(--gold-accent);
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .back-nav:hover {
+            background-color: var(--gold-accent);
+            color: #000;
+        }
+
+        /* 顶部区域 */
+        .header-sticky {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: linear-gradient(to bottom, #800000, #4d0000); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            padding: 15px 20px; text-align: center;
+            border-bottom: 2px solid var(--gold-accent);
+        }
+
+        .header-sticky h2 { margin: 5px 0; font-size: 1.4rem; color: var(--gold-accent); letter-spacing: 2px; }
+        .quote { font-style: italic; font-size: 0.85rem; margin-bottom: 10px; color: #ffb3b3; }
+
+        .input-group { display: flex; justify-content: center; gap: 10px; }
+
+        input { 
+            padding: 10px 15px; font-size: 15px; width: 300px; 
+            border: 2px solid var(--gold-accent); border-radius: 4px; 
+            background: rgba(255,255,255,0.1); color: white; transition: all 0.3s;
+        }
+
+        input:focus { outline: none; background: rgba(255,255,255,0.2); box-shadow: 0 0 10px var(--gold-accent); }
+
+        .progress-container {
+            max-width: 700px; margin: 12px auto 0; background: #333; height: 6px; border-radius: 3px;
+        }
+        #progressBar { width: 0%; height: 100%; background: var(--gold-accent); transition: width 0.5s; }
+
+        /* 修改：网格布局调整为一行六人 */
+        .quiz-grid {
+            display: grid; 
+            grid-template-columns: repeat(6, 1fr); /* 强制一行6个 */
+            gap: 15px; 
+            padding: 20px; 
+            max-width: 1600px; 
+            margin: 0 auto;
+        }
+
+        /* 针对小屏幕的响应式处理，防止卡片太窄 */
+        @media (max-width: 1200px) { .quiz-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 800px) { .quiz-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .quiz-card {
+            background: var(--card-bg); border-radius: 6px; overflow: hidden;
+            border: 1px solid #444; transition: all 0.3s ease; position: relative;
+            display: flex; flex-direction: column;
+            font-size: 0.85rem;
+        }
+
+        .quiz-card.done { border-color: var(--success-green); box-shadow: 0 0 10px rgba(40, 167, 69, 0.3); }
+        .quiz-card.missed { border-color: var(--primary-red); }
+
+        .img-container { width: 100%; aspect-ratio: 3/4; overflow: hidden; position: relative; background: #000; }
+        .quiz-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(50%); transition: 0.5s; }
+        .quiz-card.done .quiz-img { filter: grayscale(0%); }
+
+        .description-overlay {
+            padding: 10px; font-size: 0.8rem; line-height: 1.4; color: #ccc;
+            flex-grow: 1; border-top: 1px solid #444; background: #252525;
+        }
+
+        .card-info { padding: 8px; background: #1a1a1a; text-align: center; border-top: 1px solid #333; }
+        .user-ans { font-weight: bold; color: var(--gold-accent); font-size: 0.95rem; }
+
+        button { padding: 8px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        #endBtn { background: var(--gold-accent); color: #000; }
+        #restartBtn { background: var(--success-green); color: white; }
+
+        .hidden { display: none; }
+        .message-tip { height: 20px; font-size: 13px; margin-top: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="back-nav">← 返回首页</a>
+
+<div class="header-sticky">
+    <h2>《星火燎原》：国际共产主义战士专题挑战</h2>
+    <div class="quote">“他们没有私产，因为整个世界和人类的未来，就是他们留下的全部遗产。”</div>
+    
+    <div class="input-group">
+        <input id="answerInput" type="text" placeholder="输入姓名..." autofocus>
+        <button onclick="endQuiz()" id="endBtn">提交并查看结果</button>
+        <button onclick="restartQuiz()" class="hidden" id="restartBtn">再次启程</button>
+    </div>
+    <div class="progress-container"><div id="progressBar"></div></div>
+    <div id="message" class="message-tip"></div>
+</div>
+
+<div id="quizGrid" class="quiz-grid"></div>
+
+<div id="resultArea" class="hidden" style="text-align:center; padding: 40px; background: #111;">
+    <h3 id="statSummary" style="font-size: 1.8rem; color: var(--gold-accent);"></h3>
+    <p style="font-size: 1rem; color: #888;">理想的光芒永不熄灭。</p>
+</div>
+
+<script>
+    // 数据部分保持不变
+    const quizData = [
+        { name: "马克思", alts: ["卡尔马克思", "卡尔·马克思", "Karl Marx", "Marx"], desc: "他是思想的播火者，在寒冷的大英博物馆里，为全人类的自由撰写了最壮丽的蓝图。", img: "共产主义代表人物/马克思.jpg" },
+        { name: "恩格斯", alts: ["弗里德里希恩格斯", "弗里德里希·恩格斯", "Engels", "Friedrich Engels"], desc: "他是最无私的战友，用一生的守护与智慧，成就了科学社会主义的不朽双星。", img: "共产主义代表人物/恩格斯.jpg" },
+        { name: "列宁", alts: ["弗拉基米尔列宁", "弗拉基米尔·列宁", "Lenin", "Vladimir Lenin"], desc: "阿芙乐尔号的一声炮响，他让红色旗帜第一次在世界六分之一的土地上高高飘扬。", img: "共产主义代表人物/列宁.jpg" },
+        { name: "毛泽东", alts: ["毛主席", "Mao Zedong", "Mao"], desc: "一代伟人，他让占世界人口四分之一的东方巨轮，彻底告别了屈辱，驶向民族复兴。", img: "共产主义代表人物/毛泽东.jpg" },
+        { name: "周恩来", alts: ["周总理", "Zhou Enlai"], desc: "他是国际外交史上的儒将，用人格魅力诠释了什么叫全心全意为人民服务的赤子之心。", img: "共产主义代表人物/周恩来.jpg" },
+        { name: "切·格瓦拉", alts: ["切格瓦拉", "格瓦拉", "切", "Che", "Che Guevara"], desc: "他是永远在路上的自由灵魂，用那顶带红星的贝雷帽，定义了跨越世纪的叛逆与纯真。", img: "共产主义代表人物/切格瓦拉.jpg" },
+        { name: "卡斯特罗", alts: ["菲德尔卡斯特罗", "菲德尔·卡斯特罗", "Fidel Castro", "Castro"], desc: "加勒比海的硬骨头，在霸权的眼皮底下，硬是守住了古巴那抹耀眼的红色。", img: "共产主义代表人物/卡斯特罗.webp" },
+        { name: "斯大林", alts: ["约瑟夫斯大林", "约瑟夫·斯大林", "Stalin", "史达林"], desc: "他是钢铁般的统帅，带领红军在废墟中奋起，彻底粉碎了法西斯的野心。", img: "共产主义代表人物/斯大林.jpg" },
+        { name: "托洛茨基", alts: ["托洛茨基", "Trotsky"], desc: "他是“红军之父”，也是悲剧的预言家，始终在不断革命的浪潮中寻找真理。", img: "共产主义代表人物/托洛茨基.jpg" },
+        { name: "李大钊", alts: ["守常", "Li Dazhao"], desc: "中国共产主义运动的先驱，他以青春之我，为古老的中国换取了黎明的曙光。", img: "共产主义代表人物/李大钊.jpg" },
+        { name: "白求恩", alts: ["诺曼白求恩", "诺曼·白求恩", "Bethune"], desc: "跨越万里的手术刀，他将生命最后的一滴血，都洒在了中国的抗日战场。", img: "共产主义代表人物/白求恩.jpg" },
+        { name: "伊巴露丽", alts: ["多洛雷斯伊巴露丽", "热情之花", "Ibarruri"], desc: "西班牙的“热情之花”，她那句“宁可站着死，不愿跪着生”至今仍震撼人心。", img: "共产主义代表人物/伊巴露丽.jpg" },
+        { name: "伏契克", alts: ["尤利乌斯伏契克", "Fucik"], desc: "在绞刑架下的报告者，他让我们在黑暗中也要记得：人们，我是爱你们的！", img: "共产主义代表人物/伏契克.gif" },
+        { name: "罗莎·卢森堡", alts: ["罗莎卢森堡", "卢森堡", "Luxemburg"], desc: "德国工运的“红玫瑰”，即便身处深渊，她的灵魂依然仰望着自由的星空。", img: "共产主义代表人物/罗莎卢森堡.jpg" },
+        { name: "李卜克内西", alts: ["卡尔李卜克内西", "Liebknecht"], desc: "他是柏林街头的铁骨旗手，第一个在帝国议会中站出来对不义之战说“不”。", img: "共产主义代表人物/李卜克内西.jpg" },
+        { name: "胡志明", alts: ["胡伯伯", "阮必成", "Ho Chi Minh"], desc: "一生清贫的开国领袖，他用一双旧橡胶凉鞋，走出了越南民族独立的漫长征途。", img: "共产主义代表人物/胡志明.jpg" },
+        { name: "铁托", alts: ["约瑟普·布罗兹·铁托", "Tito"], desc: "巴尔干的不羁之魂，他在强权的夹缝中，铸就了南斯拉夫民族团结的丰碑。", img: "共产主义代表人物/铁托.jpg" },
+        { name: "查韦斯", alts: ["乌戈查韦斯", "乌戈·查韦斯", "Chavez"], desc: "南美丛林的赤诚之子，他用石油的财富，为贫民窟的孩子换取了尊严与面包。", img: "共产主义代表人物/乌戈·查韦斯.jpg" },
+        { name: "桑卡拉", alts: ["托马斯桑卡拉", "Sankara"], desc: "非洲最清廉的总统，他改国名为“正人君子之国”，在荒漠中种下自强的种子。", img: "共产主义代表人物/桑卡拉.webp" },
+        { name: "萨尔瓦多·阿连德", alts: ["阿连德", "Allende"], desc: "他在硝烟中的总统府殉职，用鲜血践行了对民主社会主义的最后忠诚。", img: "共产主义代表人物/萨尔瓦多·阿连德.jpg" },
+        { name: "葛兰西", alts: ["安东尼奥葛兰西", "Gramsci"], desc: "即便身处法西斯的铁窗，他的智慧依然透过了围墙，深刻剖析了权力的文化根源。", img: "共产主义代表人物/葛兰西.png" },
+        { name: "捷尔任斯基", alts: ["费利克斯捷尔任斯基", "铁腕费利克斯", "Dzerzhinsky"], desc: "他是“革命之剑”，也是拥有最清澈眼神的战士，终生与腐败和混乱作斗争。", img: "共产主义代表人物/捷尔任斯基.jpg" },
+        { name: "毕加索", alts: ["巴勃罗毕加索", "Picasso"], desc: "拿起画笔作为反法西斯的利剑，他那只和平鸽，飞过了所有热爱自由者的心头。", img: "共产主义代表人物/毕加索.jpg" },
+        { name: "聂鲁达", alts: ["巴勃罗聂鲁达", "Neruda"], desc: "智利的诗魂，他在诗行里写满了对大地与劳苦大众最深沉的告白。", img: "共产主义代表人物/聂鲁达.jpg" },
+        { name: "奥斯特洛夫斯基", alts: ["尼古拉奥斯特洛夫斯基", "Ostrovsky"], desc: "身体虽被禁锢在病榻，他却用笔告诉世界，钢铁是如何在烈火中炼成的。", img: "共产主义代表人物/奥斯特洛夫斯基.jpg" },
+        { name: "埃德加·斯诺", alts: ["斯诺", "Edgar Snow"], desc: "他是红星照耀中国的见证者，用真实的镜头击碎了偏见，让世界看见了希望。", img: "共产主义代表人物/埃德加·斯诺.jpg" },
+        { name: "马海德", alts: ["乔治·海德姆", "Shafick George Hatem"], desc: "第一位加入中国籍的外籍专家，在黄土高原上，他把医者的仁心献给了贫苦大众。", img: "共产主义代表人物/马海德.jpg" },
+        { name: "约翰·里德", alts: ["约翰里德", "John Reed"], desc: "带着相机的诗人战士，他用生命记录下那震撼世界的十个昼夜。", img: "共产主义代表人物/约翰·里德.jpg" },
+        { name: "威廉·福斯特", alts: ["威廉福斯特", "William Z. Foster"], desc: "美国工运的旗手，在资本的心脏地带，他始终在为底层工人的尊严呐喊。", img: "共产主义代表人物/威廉·Z·福斯特.png" },
+        { name: "季米特洛夫", alts: ["格奥尔基季米特洛夫", "Dimitrov"], desc: "保加利亚的英雄，他在纳粹的法庭上反客为主，审判了审判者。", img: "共产主义代表人物/季米特洛夫.jpg" },
+        { name: "托里亚蒂", alts: ["帕尔米罗托里亚蒂", "Togliatti"], desc: "意大利共产党的卓越领导者，在法西斯的铁蹄下播撒反抗的种子。", img: "共产主义代表人物/托里亚蒂.jpg" },
+        { name: "丰威汉", alts: ["凯山丰威汉", "Kaysone Phomvihane"], desc: "老挝革命的功勋领袖，他在崇山峻岭中指引人民走向民族独立。", img: "共产主义代表人物/丰威汉.jpg" },
+        { name: "金日成", alts: ["金日成主席", "Kim Il-sung"], desc: "白头山的抗日名将，带领朝鲜人民在废墟上建立起独立自主的家园。", img: "共产主义代表人物/金日成.jpg" },
+        { name: "长征", alts: ["邓春区", "Truong Chinh"], desc: "人如其名，他是越南革命的长跑者，用坚毅推动了国家的革新。", img: "共产主义代表人物/长征.jpg" },
+        { name: "苏发努冯", alts: ["红色亲王", "Souphanouvong"], desc: "为了民族大义舍弃王位的“红色亲王”，他是老挝团结奋斗的象征。", img: "共产主义代表人物/苏发努冯.jpg" },
+        { name: "拉法格", alts: ["保尔拉法格", "Lafargue"], desc: "马克思的追随者与女婿，他用一生践行了对《懒惰权》的独特思辨。", img: "共产主义代表人物/拉法格.jpg" },
+        { name: "斯维尔德洛夫", alts: ["雅科夫斯维尔德洛夫", "Sverdlov"], desc: "苏俄早期的“全能管家”，他在最艰难的岁月里，用惊人的组织力支撑起红色的政权。", img: "共产主义代表人物/斯维尔德洛夫.jpg" },
+        { name: "圣地亚哥·卡里略", alts: ["卡里略", "Santiago Carrillo"], desc: "西班牙共产党的拓荒者，他在妥协与坚持中寻找社会主义的新路径。", img: "共产主义代表人物/圣地亚哥卡里略.jpg" },
+        { name: "普列斯特斯", alts: ["路易斯·卡洛斯·普列斯特斯", "Prestes"], desc: "巴西的“希望骑士”，他曾率领纵队横跨国土，播下革命的火种。", img: "共产主义代表人物/普列斯特斯.jpg" },
+        { name: "德田球一", alts: ["Tokuda Kyuichi"], desc: "日本共产党的坚韧斗士，在十八年的牢狱之灾后，他依然高擎红旗。", img: "共产主义代表人物/德田球一.jpg" },
+        { name: "幸德秋水", alts: ["Kotoku Shusui"], desc: "东亚早期的理想主义先驱，即便走向刑场，他的心依然跳动在社会主义的脉搏里。", img: "共产主义代表人物/幸德秋水.jpg" },
+        { name: "米高扬", alts: ["阿纳斯塔斯米高扬", "Mikoyan"], desc: "经历时代风云的政治长青树，他以敏锐的智慧，始终在建设社会主义的道路上兢兢业业。", img: "共产主义代表人物/米高扬.jpg" },
+        { name: "保罗·罗伯逊", alts: ["保罗罗伯逊", "Paul Robeson"], desc: "用深沉歌声反抗压迫的美国歌唱家，他在黑人运动中高唱着全人类的自由。", img: "共产主义代表人物/保罗·罗伯逊.jpg" },
+        { name: "法捷耶夫", alts: ["亚历山大法捷耶夫", "Fadeyev"], desc: "用笔作枪的文学统帅，一曲《青年近卫军》激励了无数反法西斯的灵魂。", img: "共产主义代表人物/法捷耶夫.webp" },
+        { name: "莫里斯·多列士", alts: ["多列士", "Maurice Thorez"], desc: "法国工人的领路人，在浪漫的巴黎街头，他让红色理想扎根于群众心中。", img: "共产主义代表人物/莫里斯·多列士.jpg" },
+        { name: "萨莫拉·马谢尔", alts: ["马谢尔", "Samora Machel"], desc: "莫桑比克的自由之魂，他让古老的非洲大地挺起了不屈的脊梁。", img: "共产主义代表人物/萨莫拉·马谢尔.jpg" },
+        { name: "阿米尔卡·卡布拉尔", alts: ["卡布拉尔", "Amilcar Cabral"], desc: "非洲解放运动的理论大师，他告诉世界：文化才是反抗殖民最强的武器。", img: "共产主义代表人物/阿米尔卡·卡布拉尔.webp" },
+        { name: "陈平", alts: ["王文华", "Chin Peng"], desc: "马共的丛林传奇，他在漫长的游击岁月中，书写了一段不为人知的南洋革命史。", img: "共产主义代表人物/陈平.jpg" },
+        { name: "格斯·霍尔", alts: ["格斯霍尔", "Gus Hall"], desc: "美国共产党数度总统候选人，在冰冷的麦卡锡时代，他始终未曾向霸权低头。", img: "共产主义代表人物/格斯霍尔.jpg" },
+        { name: "普拉昌达", alts: ["普斯帕·卡迈勒·达哈尔", "Prachanda"], desc: "从雪山深处走出的领袖，他在政坛与丛林之间，为尼泊尔寻找未来的答案。", img: "共产主义代表人物/普拉昌达.jpg" },
+        { name: "野坂参三", alts: ["冈野进", "Nosaka Sanzo"], desc: "跨越战火的中日友好桥梁，他在延安的灯火下，思考着日本民族的新生。", img: "共产主义代表人物/野坂参三.jpg" }
+    ];
+
+    let userCorrectIndexes = [];
+    let ended = false;
+    const inputBox = document.getElementById("answerInput");
+    const grid = document.getElementById("quizGrid");
+
+    function initGrid() {
+        grid.innerHTML = "";
+        quizData.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "quiz-card";
+            card.id = `card-${index}`;
+            card.innerHTML = `
+                <div class="img-container">
+                    <img src="${item.img}" class="quiz-img">
+                </div>
+                <div class="description-overlay">
+                    ${item.desc}
+                </div>
+                <div class="card-info">
+                    <div id="ans-text-${index}" class="user-ans">???</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    inputBox.addEventListener("keydown", (e) => { 
+        if (e.key === "Enter" && !ended) checkAnswer(); 
+    });
+
+    function checkAnswer() {
+        const input = inputBox.value.trim().toLowerCase();
+        if (!input) return;
+
+        let foundIndex = -1;
+        quizData.forEach((item, idx) => {
+            if (item.name.toLowerCase() === input || item.alts.some(a => a.toLowerCase() === input)) {
+                foundIndex = idx;
+            }
+        });
+
+        const message = document.getElementById("message");
+        if (foundIndex !== -1) {
+            if (!userCorrectIndexes.includes(foundIndex)) {
+                userCorrectIndexes.push(foundIndex);
+                message.style.color = "var(--success-green)";
+                message.innerText = "匹配成功！";
+                markAsDone(foundIndex);
+            } else {
+                message.style.color = "var(--gold-accent)";
+                message.innerText = "已在队列中。";
+            }
+        } else {
+            message.style.color = "var(--primary-red)";
+            message.innerText = "未找到匹配。";
+        }
+        inputBox.value = "";
+        updateProgress();
+    }
+
+    function markAsDone(index) {
+        const card = document.getElementById(`card-${index}`);
+        card.classList.add("done");
+        document.getElementById(`ans-text-${index}`).innerText = quizData[index].name;
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function updateProgress() {
+        const progress = (userCorrectIndexes.length / quizData.length) * 100;
+        document.getElementById("progressBar").style.width = `${progress}%`;
+    }
+
+    function endQuiz() {
+        ended = true;
+        inputBox.disabled = true;
+        
+        quizData.forEach((item, index) => {
+            if (!userCorrectIndexes.includes(index)) {
+                document.getElementById(`card-${index}`).classList.add("missed");
+                document.getElementById(`ans-text-${index}`).innerHTML = 
+                    `<span style="color:var(--primary-red)">${item.name}</span>`;
+            }
+        });
+
+        const score = userCorrectIndexes.length;
+        document.getElementById("statSummary").innerText = 
+            `挑战结束：你识别了 ${score} / ${quizData.length} 位战士！`;
+        document.getElementById("resultArea").classList.remove("hidden");
+        document.getElementById("restartBtn").classList.remove("hidden");
+        document.getElementById("endBtn").classList.add("hidden");
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    function restartQuiz() { location.reload(); }
+
+    initGrid();
+</script>
+</body>
+</html>
