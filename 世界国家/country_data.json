@@ -216,7 +216,7 @@
       "svgId": "南非",
       "accuracy": 84,
       "continent": "非洲",
-      "subRegion": "南非"
+      "subRegion": "南部非洲"
     },
     {
       "name": "瑞典",
@@ -381,7 +381,7 @@
     },
     {
       "name": "刚果",
-      "svgId": "刚果",
+      "svgId": "刚果共和国",
       "accuracy": 77,
       "continent": "非洲",
       "subRegion": "中非"
@@ -689,7 +689,7 @@
     },
     {
       "name": "中非",
-      "svgId": "中非",
+      "svgId": "中非共和国",
       "accuracy": 61,
       "continent": "非洲",
       "subRegion": "中非"
@@ -979,7 +979,7 @@
       "svgId": ["安道尔", "andorra-cover"],
       "accuracy": 45,
       "continent": "欧洲",
-      "subRegion": "南欧"
+      "subRegion": "西欧"
     },
     {
       "name": "多米尼加",
@@ -1326,7 +1326,7 @@
     },
     {
       "name": "瓦努阿图",
-      "svgId": "瓦努阿图",
+      "svgId": ["Vanuatu-cover", "瓦努阿图"],
       "accuracy": 21,
       "continent": "大洋洲",
       "subRegion": "美拉尼西亚"

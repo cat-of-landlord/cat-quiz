@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>地质年代全能挑战 - 完整版</title>
+    <style>
+      :root {
+        --primary-dark: #1a252f;
+        --accent-blue: #3498db;
+        --success-green: #27ae60;
+        --error-red: #e74c3c;
+        --warning-yellow: #f39c12;
+        --text-main: #2c3e50;
+        --text-light: #7f8c8d;
+        --bg-light: #f4f7f6;
+        --bg-white: #ffffff;
+        --border-light: #eee;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.1);
+        --transition-base: all 0.3s ease;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui,
+          sans-serif;
+        background-color: var(--bg-light);
+        color: var(--text-main);
+        padding-top: 180px; /* 适配提示框下移后的布局 */
+        line-height: 1.6;
+      }
+
+      /* 悬浮固定 Header */
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: var(--primary-dark);
+        color: white;
+        padding: 15px 0;
+        box-shadow: var(--shadow-md);
+        z-index: 1000;
+      }
+
+      .header-top {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap; /* 移动端换行 */
+        gap: 10px;
+      }
+
+      .header-top a {
+        color: #bdc3c7;
+        text-decoration: none;
+        transition: var(--transition-base);
+      }
+
+      .header-top a:hover {
+        color: var(--accent-blue);
+      }
+
+      .header-top h3 {
+        margin: 0;
+        letter-spacing: 1px;
+        font-size: 18px;
+      }
+
+      .stats-area {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap; /* 移动端换行 */
+      }
+
+      .stat-box {
+        text-align: center;
+        min-width: 80px;
+      }
+      .stat-label {
+        font-size: 11px;
+        color: #95a5a6;
+        display: block;
+      }
+      .stat-value {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--accent-blue);
+      }
+
+      /* 输入交互区 - 关键修改：相对定位，避免提示框挤压 */
+      .input-sticky-bar {
+        max-width: 800px;
+        margin: 15px auto 0;
+        display: flex;
+        gap: 10px;
+        padding: 0 20px;
+        flex-direction: column; /* 移动端垂直排列 */
+        position: relative; /* 新增：让提示框相对此容器定位 */
+        min-height: 60px; /* 确保输入框高度稳定 */
+      }
+
+      /* 提示框样式 - 关键修改：绝对定位到输入框下方 */
+      .tip-box {
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-size: 14px;
+        text-align: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition-base);
+        /* 核心修改：绝对定位，不占据流空间 */
+        position: absolute;
+        top: calc(100% + 8px); /* 输入框下方8px */
+        left: 20px;
+        right: 20px;
+        width: calc(100% - 40px); /* 匹配输入框宽度 */
+        z-index: 999; /* 确保在最上层 */
+      }
+
+      .tip-box.error {
+        background: rgba(231, 76, 60, 0.1);
+        color: var(--error-red);
+        border: 1px solid var(--error-red);
+      }
+
+      .tip-box.duplicate {
+        background: rgba(243, 156, 18, 0.1);
+        color: var(--warning-yellow);
+        border: 1px solid var(--warning-yellow);
+      }
+
+      .tip-box.show {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      #global-input {
+        flex: 1;
+        padding: 12px 25px;
+        border: 1px solid transparent;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        outline: none;
+        box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        transition: var(--transition-base);
+        width: 100%; /* 确保输入框宽度稳定 */
+      }
+
+      #global-input:focus {
+        box-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
+        border-color: var(--accent-blue);
+      }
+
+      #global-input:disabled {
+        background: #ecf0f1;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      /* 进度条 - 关键修改：增粗到8px */
+      .progress-bar-wrap {
+        height: 8px; /* 从4px增粗到8px */
+        background: #34495e;
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+        border-radius: 4px; /* 匹配8px高度的圆角 */
+        overflow: hidden;
+      }
+      #progress-inner {
+        height: 100%;
+        width: 0%;
+        background: var(--success-green);
+        transition: width 0.4s ease;
+      }
+
+      /* 内容区 */
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-white);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 20px;
+      }
+
+      /* 表格 - 关键修改：缩小行间距、字体 */
+      th {
+        background: #ecf0f1;
+        color: var(--text-light);
+        padding: 8px 8px; /* 从15px缩小到8px */
+        font-size: 12px; /* 从13px缩小到12px */
+        border-bottom: 2px solid #ddd;
+        text-align: left;
+      }
+      td {
+        border: 1px solid var(--border-light);
+        padding: 4px 6px; /* 从12px缩小到4px */
+        text-align: center;
+        transition: var(--transition-base);
+        font-size: 11px; /* 新增：缩小到11px */
+        line-height: 1.4; /* 调整行高，减小行间距 */
+      }
+
+      tr:hover td {
+        background: #f8f9fa; /* 行hover效果保留 */
+      }
+
+      /* 状态样式 */
+      .blank {
+        background: #fafafa;
+        color: transparent;
+        position: relative;
+      }
+      .blank::after {
+        content: "?";
+        color: #eee;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 10px; /* 缩小问号字体 */
+      }
+
+      .revealed {
+        color: var(--success-green) !important;
+        background: #e8f8f5 !important;
+        font-weight: bold;
+      }
+      .revealed::after {
+        content: "";
+      }
+
+      .missed {
+        color: var(--error-red) !important;
+        background: #fff5f5 !important;
+        font-style: italic;
+      }
+      .missed::after {
+        content: "";
+      }
+
+      .no-data {
+        background: #f9f9f9;
+        color: #ccc !important;
+        font-size: 10px; /* 缩小无数据字体 */
+      }
+
+      .time-cell {
+        font-family: monospace;
+        font-weight: bold;
+        color: var(--text-light);
+        width: 100px; /* 微调时间列宽度 */
+        font-size: 10px; /* 缩小时间字体 */
+      }
+
+      /* 按钮样式优化 */
+      .btn {
+        padding: 8px 20px;
+        border-radius: 20px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        transition: var(--transition-base);
+        font-size: 14px;
+      }
+
+      .btn-end {
+        background: var(--error-red);
+        color: white;
+      }
+
+      .btn-reset {
+        background: var(--accent-blue);
+        color: white;
+      }
+
+      .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      /* 响应式适配 - 补充表格移动端优化 */
+      @media (min-width: 768px) {
+        .input-sticky-bar {
+          flex-direction: row; /* 大屏水平排列 */
+        }
+      }
+
+      @media (max-width: 767px) {
+        body {
+          padding-top: 200px;
+        }
+        .header-top {
+          justify-content: center;
+        }
+        .stats-area {
+          justify-content: center;
+        }
+        /* 移动端表格进一步缩小 */
+        th,
+        td {
+          padding: 3px 4px;
+          font-size: 10px;
+        }
+        .time-cell {
+          width: 70px;
+        }
+        /* 移动端提示框适配 */
+        .tip-box {
+          left: 10px;
+          right: 10px;
+          width: calc(100% - 20px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-top">
+        <a href="index.html">← 首页</a>
+        <h3>你能填完整个地质年代表吗？</h3>
+        <div class="stats-area">
+          <div class="stat-box">
+            <span class="stat-label">已匹配</span>
+            <span class="stat-value" id="correct-count">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">完成率</span>
+            <span class="stat-value" id="accuracy">0%</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">错误次数</span>
+            <span class="stat-value" id="error-count">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">用时</span>
+            <span class="stat-value" id="game-time">00:00</span>
+          </div>
+          <button class="btn btn-reset" onclick="resetGame()">重置</button>
+          <button class="btn btn-end" onclick="endGame()">结束</button>
+        </div>
+      </div>
+      <div class="input-sticky-bar">
+        <!-- 提示框 - 现在绝对定位到输入框下方 -->
+        <div class="tip-box" id="tip-box"></div>
+        <input
+          type="text"
+          id="global-input"
+          placeholder="键入名称并回车匹配 (如: 寒武纪, 泥盆纪, 始新世)..."
+          autocomplete="off"
+          autofocus
+        />
+      </div>
+      <div class="progress-bar-wrap"><div id="progress-inner"></div></div>
+    </header>
+
+    <div class="container">
+      <table>
+        <thead>
+          <tr>
+            <th>宙</th>
+            <th>代</th>
+            <th>纪</th>
+            <th>世</th>
+            <th>期</th>
+            <th>起始时间 (Ma)</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <script>
+      // 地质年代数据（修复萨克马尔期时间错误）
+      const geoData = [
+        // 1. 冥古宙
+        {
+          name: "冥古宙",
+          type: "eon_no_child",
+          startTime: "4567",
+        },
+        // 2. 太古宙
+        {
+          name: "太古宙",
+          type: "eon",
+          children: [
+            { name: "始太古代", type: "era_no_child", startTime: "4031±3" },
+            { name: "古太古代", type: "era_no_child", startTime: "3600" },
+            { name: "中太古代", type: "era_no_child", startTime: "3200" },
+            { name: "新太古代", type: "era_no_child", startTime: "2800" },
+          ],
+        },
+        // 3. 元古宙
+        {
+          name: "元古宙",
+          type: "eon",
+          children: [
+            {
+              name: "古元古代",
+              type: "era",
+              startTime: "2500",
+              children: [
+                { name: "成铁纪", type: "period", startTime: "2500" },
+                { name: "层侵纪", type: "period", startTime: "2300" },
+                { name: "造山纪", type: "period", startTime: "2050" },
+                { name: "固结纪", type: "period", startTime: "1800" },
+              ],
+            },
+            {
+              name: "中元古代",
+              type: "era",
+              startTime: "1600",
+              children: [
+                { name: "盖层纪", type: "period", startTime: "1600" },
+                { name: "延展纪", type: "period", startTime: "1400" },
+                { name: "狭带纪", type: "period", startTime: "1200" },
+              ],
+            },
+            {
+              name: "新元古代",
+              type: "era",
+              startTime: "1000",
+              children: [
+                { name: "拉伸纪", type: "period", startTime: "1000" },
+                { name: "成冰纪", type: "period", startTime: "720" },
+                { name: "埃迪卡拉纪", type: "period", startTime: "635" },
+              ],
+            },
+          ],
+        },
+        // 4. 显生宙
+        {
+          name: "显生宙",
+          type: "eon",
+          children: [
+            // 古生代
+            {
+              name: "古生代",
+              type: "era",
+              startTime: "541",
+              children: [
+                {
+                  name: "寒武纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "纽芬兰世",
+                      type: "epoch",
+                      children: [
+                        { name: "幸运期", type: "age", startTime: "538.8" },
+                        { name: "第二期", type: "age", startTime: "529" },
+                      ],
+                    },
+                    {
+                      name: "第二世",
+                      type: "epoch",
+                      children: [
+                        { name: "第三期", type: "age", startTime: "521" },
+                        { name: "第四期", type: "age", startTime: "514" },
+                      ],
+                    },
+                    {
+                      name: "苗岭世",
+                      type: "epoch",
+                      children: [
+                        { name: "乌溜期", type: "age", startTime: "509" },
+                        { name: "鼓山期", type: "age", startTime: "504.5" },
+                        { name: "古丈期", type: "age", startTime: "500.5" },
+                      ],
+                    },
+                    {
+                      name: "芙蓉世",
+                      type: "epoch",
+                      children: [
+                        { name: "排碧期", type: "age", startTime: "497.0" },
+                        { name: "江山期", type: "age", startTime: "494" },
+                        { name: "第十期", type: "age", startTime: "489.5" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: "奥陶纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "下奥陶世",
+                      type: "epoch",
+                      children: [
+                        { name: "特马豆克期", type: "age", startTime: "485.4" },
+                        { name: "弗洛期", type: "age", startTime: "477.7" },
+                      ],
+                    },
+                    {
+                      name: "中奥陶世",
+                      type: "epoch",
+                      children: [
+                        { name: "大坪期", type: "age", startTime: "470" },
+                        { name: "达瑞威尔期", type: "age", startTime: "467.3" },
+                      ],
+                    },
+                    {
+                      name: "上奥陶世",
+                      type: "epoch",
+                      children: [
+                        { name: "桑比期", type: "age", startTime: "458.4" },
+                        { name: "凯迪期", type: "age", startTime: "453" },
+                        { name: "赫南特期", type: "age", startTime: "445.2" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: "志留纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "兰多维列世",
+                      type: "epoch",
+                      children: [
+                        { name: "鲁丹期", type: "age", startTime: "443.8" },
+                        { name: "埃隆期", type: "age", startTime: "440.8" },
+                        { name: "特列奇期", type: "age", startTime: "438.5" },
+                      ],
+                    },
+                    {
+                      name: "温洛克世",
+                      type: "epoch",
+                      children: [
+                        { name: "申伍德期", type: "age", startTime: "433.4" },
+                        { name: "侯默期", type: "age", startTime: "430.5" },
+                      ],
+                    },
+                    {
+                      name: "罗德洛世",
+                      type: "epoch",
+                      children: [
+                        { name: "高斯特期", type: "age", startTime: "427.4" },
+                        { name: "卢德福德期", type: "age", startTime: "425.6" },
+                      ],
+                    },
+                    { name: "普里道利世", type: "epoch", startTime: "423" },
+                  ],
+                },
+                {
+                  name: "泥盆纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "下泥盆世",
+                      type: "epoch",
+                      children: [
+                        { name: "洛赫科夫期", type: "age", startTime: "419.2" },
+                        { name: "布拉格期", type: "age", startTime: "410.8" },
+                        { name: "埃姆斯期", type: "age", startTime: "407.6" },
+                      ],
+                    },
+                    {
+                      name: "中泥盆世",
+                      type: "epoch",
+                      children: [
+                        { name: "艾菲尔期", type: "age", startTime: "393.3" },
+                        { name: "吉维特期", type: "age", startTime: "387.7" },
+                      ],
+                    },
+                    {
+                      name: "上泥盆世",
+                      type: "epoch",
+                      children: [
+                        { name: "弗拉期", type: "age", startTime: "382.7" },
+                        { name: "法门期", type: "age", startTime: "372.2" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: "石炭纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "密西西比亚世",
+                      type: "epoch",
+                      children: [
+                        { name: "杜内期", type: "age", startTime: "358.9" },
+                        { name: "维宪期", type: "age", startTime: "346.7" },
+                        {
+                          name: "谢尔普霍夫期",
+                          type: "age",
+                          startTime: "330.9",
+                        },
+                      ],
+                    },
+                    {
+                      name: "宾夕法尼亚世",
+                      type: "epoch",
+                      children: [
+                        { name: "巴什基尔期", type: "age", startTime: "323.2" },
+                        { name: "莫斯科期", type: "age", startTime: "315.2" },
+                        { name: "卡西莫夫期", type: "age", startTime: "307" },
+                        { name: "格舍尔期", type: "age", startTime: "303.7" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: "二叠纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "乌拉尔世",
+                      type: "epoch",
+                      children: [
+                        { name: "阿瑟尔期", type: "age", startTime: "298.9" },
+                        {
+                          name: "萨克马尔期",
+                          type: "age",
+                          startTime: "293.52",
+                        }, // 修复错误值
+                        { name: "亚丁斯克期", type: "age", startTime: "290.1" },
+                        { name: "空谷期", type: "age", startTime: "283.5" },
+                      ],
+                    },
+                    {
+                      name: "瓜德鲁普世",
+                      type: "epoch",
+                      children: [
+                        { name: "罗德期", type: "age", startTime: "273.01" },
+                        { name: "沃德期", type: "age", startTime: "266.9" },
+                        { name: "卡匹敦期", type: "age", startTime: "264.28" },
+                      ],
+                    },
+                    {
+                      name: "乐平世",
+                      type: "epoch",
+                      children: [
+                        { name: "吴家坪期", type: "age", startTime: "259.51" },
+                        { name: "长兴期", type: "age", startTime: "254.14" },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            // 中生代
+            {
+              name: "中生代",
+              type: "era",
+              startTime: "252.17",
+              children: [
+                {
+                  name: "三叠纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "下三叠世",
+                      type: "epoch",
+                      children: [
+                        { name: "印度期", type: "age", startTime: "251.902" },
+                        { name: "奥伦尼克期", type: "age", startTime: "251.2" },
+                      ],
+                    },
+                    {
+                      name: "中三叠世",
+                      type: "epoch",
+                      children: [
+                        { name: "安尼期", type: "age", startTime: "247.2" },
+                        { name: "拉丁期", type: "age", startTime: "242" },
+                      ],
+                    },
+                    {
+                      name: "上三叠世",
+                      type: "epoch",
+                      children: [
+                        { name: "卡尼期", type: "age", startTime: "237" },
+                        { name: "诺利期", type: "age", startTime: "227" },
+                        { name: "瑞替期", type: "age", startTime: "208.5" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: "侏罗纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "下侏罗世",
+                      type: "epoch",
+                      children: [
+                        { name: "赫塘期", type: "age", startTime: "201.4" },
+                        { name: "辛涅缪尔期", type: "age", startTime: "199.5" },
+                        { name: "普林斯巴期", type: "age", startTime: "192.9" },
+                        { name: "托阿尔期", type: "age", startTime: "184.2" },
+                      ],
+                    },
+                    {
+                      name: "中侏罗世",
+                      type: "epoch",
+                      children: [
+                        { name: "阿林期", type: "age", startTime: "174.7" },
+                        { name: "巴柔期", type: "age", startTime: "170.9" },
+                        { name: "巴通期", type: "age", startTime: "168.2" },
+                        { name: "卡洛夫期", type: "age", startTime: "165.3" },
+                      ],
+                    },
+                    {
+                      name: "上侏罗世",
+                      type: "epoch",
+                      children: [
+                        { name: "牛津期", type: "age", startTime: "161.5" },
+                        { name: "钦莫利期", type: "age", startTime: "154.8" },
+                        { name: "提塘期", type: "age", startTime: "149.2" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: "白垩纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "下白垩世",
+                      type: "epoch",
+                      children: [
+                        { name: "贝里阿斯期", type: "age", startTime: "145.0" },
+                        { name: "瓦兰今期", type: "age", startTime: "139.8" },
+                        { name: "欧特里夫期", type: "age", startTime: "132.6" },
+                        { name: "巴雷姆期", type: "age", startTime: "125.77" },
+                        { name: "阿普特期", type: "age", startTime: "121.4" },
+                        { name: "阿尔布期", type: "age", startTime: "113.0" },
+                      ],
+                    },
+                    {
+                      name: "上白垩世",
+                      type: "epoch",
+                      children: [
+                        { name: "赛诺曼期", type: "age", startTime: "100.5" },
+                        { name: "土伦期", type: "age", startTime: "93.9" },
+                        { name: "康尼亚克期", type: "age", startTime: "89.8" },
+                        { name: "圣通期", type: "age", startTime: "86.3" },
+                        { name: "坎潘期", type: "age", startTime: "83.6" },
+                        {
+                          name: "马斯特里赫特期",
+                          type: "age",
+                          startTime: "72.1",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            // 新生代
+            {
+              name: "新生代",
+              type: "era",
+              startTime: "66",
+              children: [
+                {
+                  name: "古近纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "古新世",
+                      type: "epoch",
+                      children: [
+                        { name: "丹麦期", type: "age", startTime: "66" },
+                        { name: "塞兰特期", type: "age", startTime: "61.6" },
+                        { name: "坦尼特期", type: "age", startTime: "59.2" },
+                      ],
+                    },
+                    {
+                      name: "始新世",
+                      type: "epoch",
+                      children: [
+                        { name: "伊普里斯期", type: "age", startTime: "56.0" },
+                        { name: "卢泰特期", type: "age", startTime: "47.8" },
+                        { name: "巴顿期", type: "age", startTime: "41.2" },
+                        { name: "普利亚本期", type: "age", startTime: "37.71" },
+                      ],
+                    },
+                    {
+                      name: "渐新世",
+                      type: "epoch",
+                      children: [
+                        { name: "吕珀尔期", type: "age", startTime: "33.9" },
+                        { name: "夏特期", type: "age", startTime: "27.82" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: "新近纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "中新世",
+                      type: "epoch",
+                      children: [
+                        { name: "阿基坦期", type: "age", startTime: "23.03" },
+                        { name: "波尔多期", type: "age", startTime: "20.44" },
+                        { name: "兰盖期", type: "age", startTime: "15.98" },
+                        { name: "塞拉瓦莱期", type: "age", startTime: "13.82" },
+                        { name: "托尔托纳期", type: "age", startTime: "11.63" },
+                        { name: "墨西拿期", type: "age", startTime: "7.246" },
+                      ],
+                    },
+                    {
+                      name: "上新世",
+                      type: "epoch",
+                      children: [
+                        { name: "赞克勒期", type: "age", startTime: "5.333" },
+                        { name: "皮亚琴察期", type: "age", startTime: "3.6" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  name: "第四纪",
+                  type: "period",
+                  children: [
+                    {
+                      name: "更新世",
+                      type: "epoch",
+                      children: [
+                        { name: "杰拉期", type: "age", startTime: "2.58" },
+                        { name: "卡拉布里雅期", type: "age", startTime: "1.8" },
+                        { name: "千叶期", type: "age", startTime: "0.774" },
+                        { name: "上期", type: "age", startTime: "0.126" },
+                      ],
+                    },
+                    {
+                      name: "全新世",
+                      type: "epoch",
+                      children: [
+                        { name: "格陵兰期", type: "age", startTime: "0.0117" },
+                        {
+                          name: "诺斯格瑞比期",
+                          type: "age",
+                          startTime: "0.0082",
+                        },
+                        {
+                          name: "梅加拉亚期",
+                          type: "age",
+                          startTime: "0.0042",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ];
+
+      // 答案别名映射
+      const answerAliases = {
+        森诺曼: "赛诺曼",
+        晚更新: "上",
+        上更新: "上",
+        中: "千叶",
+        中更新: "千叶",
+        卡里布利亚: "卡拉布里雅",
+        皮亚琴: "皮亚琴察",
+        赞克尔: "赞克勒",
+        托尔顿: "托尔托纳",
+        赛拉瓦尔: "塞拉瓦莱",
+        恰特: "夏特",
+        鲁培尔: "吕珀尔",
+        普利阿邦: "普利亚本",
+        巴尔顿: "巴顿",
+        路特: "卢泰特",
+        伊普雷斯: "伊普里斯",
+        赞尼特: "坦尼特",
+        达宁: "丹麦",
+        马斯垂克: "马斯特里赫特",
+        麦斯里希特: "马斯特里赫特",
+        坎帕: "坎潘",
+        桑托: "圣通",
+        科尼亚克: "康尼亚克",
+        土仑: "土伦",
+        阿普第: "阿普特",
+        巴列姆: "巴雷姆",
+        豪特里维: "欧特里夫",
+        凡蓝今: "瓦兰今",
+        贝里亚: "贝里阿斯",
+        提通: "提塘",
+        启莫里: "钦莫利",
+        空谷尔: "空谷",
+        孔古: "空谷",
+        昆古尔: "空谷",
+        弗拉斯: "弗拉",
+        洛赫考夫: "洛赫科夫",
+        戈斯特: "高斯特",
+        晚白垩: "上白垩",
+        早白垩: "下白垩",
+        晚侏罗: "上侏罗",
+        早侏罗: "下侏罗",
+        晚三叠: "上三叠",
+        早三叠: "下三叠",
+        晚泥盆: "上泥盆",
+        早泥盆: "下泥盆",
+        晚奥陶: "上奥陶",
+        早奥陶: "下奥陶",
+        艾迪卡拉: "埃迪卡拉",
+        南华: "成冰",
+      };
+
+      // 全局状态管理
+      let gameState = {
+        leafNodes: [],
+        allAnswerObjects: [],
+        totalBlanks: 0,
+        gameActive: true,
+        correctCount: 0,
+        errorCount: 0,
+        startTime: Date.now(),
+        timerInterval: null,
+        lastNodeAtLevel: [null, null, null, null, null],
+      };
+
+      // 工具函数：标准化名称（去除后缀、替换别名）
+      function normalizeName(name) {
+        if (!name) return "";
+        // 去除“宙/代/纪/世/期/阶/统/系/界/宇”等后缀
+        const core = name.replace(/[宙宇代界纪系世统期阶]/g, "").trim();
+        // 替换别名
+        return answerAliases[core] || core;
+      }
+
+      // 工具函数：显示提示框
+      function showTip(message, type) {
+        const tipBox = document.getElementById("tip-box");
+        tipBox.textContent = message;
+        tipBox.className = `tip-box ${type}`;
+        tipBox.classList.add("show");
+
+        // 3秒后隐藏提示
+        setTimeout(() => {
+          tipBox.classList.remove("show");
+        }, 3000);
+      }
+
+      // 扁平化数据结构
+      function flattenNode(node, path) {
+        const currentPath = [...path, node];
+        if (!node.children || node.type === "period_no_child") {
+          gameState.leafNodes.push({
+            path: currentPath,
+            startTime: node.startTime,
+          });
+        } else {
+          node.children.forEach((child) => flattenNode(child, currentPath));
+        }
+      }
+
+      // 计算节点的行跨度
+      function getRowSpan(node) {
+        if (!node.children || node.type === "period_no_child") return 1;
+        return node.children.reduce((acc, child) => acc + getRowSpan(child), 0);
+      }
+
+      // 初始化表格
+      function initTable() {
+        const tbody = document.getElementById("table-body");
+        tbody.innerHTML = ""; // 清空表格
+        gameState.leafNodes = [];
+        gameState.allAnswerObjects = [];
+        gameState.totalBlanks = 0;
+        gameState.lastNodeAtLevel = [null, null, null, null, null];
+
+        // 扁平化数据
+        geoData.forEach((eon) => flattenNode(eon, []));
+
+        // 生成表格行
+        gameState.leafNodes.forEach((leaf) => {
+          const tr = document.createElement("tr");
+          // 生成宙、代、纪、世、期5列
+          for (let level = 0; level < 5; level++) {
+            const node = leaf.path[level];
+            if (node) {
+              if (node !== gameState.lastNodeAtLevel[level]) {
+                const td = document.createElement("td");
+                td.rowSpan = getRowSpan(node);
+                td.className = "blank";
+                td.textContent = node.name;
+                gameState.allAnswerObjects.push({
+                  name: node.name,
+                  type: node.type,
+                  element: td,
+                  isRevealed: false,
+                  normalizedName: normalizeName(node.name), // 预计算标准化名称
+                });
+                tr.appendChild(td);
+                gameState.lastNodeAtLevel[level] = node;
+                gameState.totalBlanks++;
+              }
+            } else {
+              // 无数据的列
+              const td = document.createElement("td");
+              td.className = "no-data";
+              td.textContent = "—";
+              tr.appendChild(td);
+            }
+          }
+          // 时间列
+          const tdTime = document.createElement("td");
+          tdTime.className = "time-cell";
+          tdTime.textContent = leaf.startTime;
+          tr.appendChild(tdTime);
+          tbody.appendChild(tr);
+        });
+
+        // 初始化统计数据
+        document.getElementById(
+          "correct-count"
+        ).textContent = `0 / ${gameState.totalBlanks}`;
+        document.getElementById("error-count").textContent = "0";
+        document.getElementById("accuracy").textContent = "0%";
+        document.getElementById("progress-inner").style.width = "0%";
+      }
+
+      // 更新游戏统计
+      function updateStats() {
+        // 已匹配数
+        document.getElementById(
+          "correct-count"
+        ).textContent = `${gameState.correctCount} / ${gameState.totalBlanks}`;
+        // 错误次数
+        document.getElementById("error-count").textContent =
+          gameState.errorCount;
+        // 完成率
+        const ratio = (gameState.correctCount / gameState.totalBlanks) * 100;
+        document.getElementById("accuracy").textContent = `${Math.round(
+          ratio
+        )}%`;
+        document.getElementById("progress-inner").style.width = `${ratio}%`;
+      }
+
+      // 更新答题用时
+      function updateGameTime() {
+        const now = Date.now();
+        const diff = Math.floor((now - gameState.startTime) / 1000);
+        const minutes = String(Math.floor(diff / 60)).padStart(2, "0");
+        const seconds = String(diff % 60).padStart(2, "0");
+        document.getElementById(
+          "game-time"
+        ).textContent = `${minutes}:${seconds}`;
+      }
+
+      // 检查输入答案
+      function checkInput() {
+        if (!gameState.gameActive) return;
+        const inputField = document.getElementById("global-input");
+        const inputVal = inputField.value.trim();
+
+        if (!inputVal) {
+          showTip("请输入地质年代名称", "error");
+          return;
+        }
+
+        const normalizedInput = normalizeName(inputVal);
+        let isDuplicate = false;
+        let isCorrect = false;
+
+        // 检查答案
+        gameState.allAnswerObjects.forEach((obj) => {
+          if (obj.normalizedName === normalizedInput) {
+            if (obj.isRevealed) {
+              isDuplicate = true;
+            } else {
+              obj.isRevealed = true;
+              obj.element.classList.add("revealed");
+              gameState.correctCount++;
+              isCorrect = true;
+            }
+          }
+        });
+
+        // 处理结果
+        if (isDuplicate) {
+          showTip(`"${inputVal}" 已回答过啦！`, "duplicate");
+        } else if (isCorrect) {
+          updateStats();
+        } else {
+          showTip(`"${inputVal}" 不是正确答案哦！`, "error");
+          gameState.errorCount++;
+          updateStats();
+        }
+
+        // 清空输入框
+        inputField.value = "";
+      }
+
+      // 结束游戏
+      function endGame() {
+        if (!confirm("确定结束游戏吗？未答对的将标记为错误。")) return;
+
+        gameState.gameActive = false;
+        clearInterval(gameState.timerInterval); // 停止计时
+        const inputField = document.getElementById("global-input");
+        inputField.disabled = true;
+
+        // 标记未答对的选项
+        gameState.allAnswerObjects.forEach((obj) => {
+          if (!obj.isRevealed) obj.element.classList.add("missed");
+        });
+
+        updateStats();
+        showTip("游戏结束！点击重置可重新开始", "duplicate");
+      }
+
+      // 重置游戏
+      function resetGame() {
+        // 重置状态
+        gameState.gameActive = true;
+        gameState.correctCount = 0;
+        gameState.errorCount = 0;
+        gameState.startTime = Date.now();
+
+        // 重启输入框
+        const inputField = document.getElementById("global-input");
+        inputField.disabled = false;
+        inputField.focus();
+
+        // 重新初始化表格
+        initTable();
+
+        // 重启计时器
+        clearInterval(gameState.timerInterval);
+        gameState.timerInterval = setInterval(updateGameTime, 1000);
+
+        // 隐藏提示
+        document.getElementById("tip-box").classList.remove("show");
+      }
+
+      // 初始化游戏
+      function initGame() {
+        initTable();
+        // 启动计时器
+        gameState.timerInterval = setInterval(updateGameTime, 1000);
+        // 绑定输入框回车事件
+        document
+          .getElementById("global-input")
+          .addEventListener("keydown", (e) => {
+            if (e.key === "Enter") checkInput();
+          });
+        // 绑定ESC键结束游戏
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") endGame();
+        });
+      }
+
+      // 页面加载完成后初始化
+      window.addEventListener("DOMContentLoaded", initGame);
+    </script>
+  </body>
+</html>
