@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>全国本科大学识名挑战</title>
+    <style>
+      :root {
+        --primary-color: #007bff;
+        --success-color: #28a745;
+        --danger-color: #dc3545;
+        --bg-color: #f8f9fa;
+        --gray-color: #6c757d;
+        --light-gray: #e9ecef;
+      }
+
+      body {
+        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 130px 10px 20px; /* 减少顶部padding适配更矮的header */
+        background-color: var(--bg-color);
+        color: #333;
+        font-size: 14px; /* 基础字体缩小 */
+      }
+
+      /* 顶部固定区域 - 压缩高度+紧凑布局 */
+      .header-sticky {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 8px 10px; /* 大幅减少上下内边距 */
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header-sticky h2 {
+        margin: 0 0 8px 0; /* 减少标题下方间距 */
+        font-size: 1.1rem; /* 缩小标题字体 */
+        color: #333;
+        text-align: center;
+        line-height: 1.2; /* 紧凑行高 */
+      }
+
+      .input-group {
+        display: flex;
+        justify-content: center;
+        gap: 8px; /* 缩小按钮和输入框间距 */
+        margin-bottom: 8px; /* 减少下方间距 */
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      input {
+        padding: 8px 12px; /* 缩小输入框内边距 */
+        font-size: 14px; /* 输入框字体缩小 */
+        width: 280px; /* 轻微缩小宽度 */
+        border: 2px solid #ddd;
+        border-radius: 20px; /* 轻微缩小圆角 */
+        transition: all 0.3s;
+      }
+
+      input:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 6px rgba(0, 123, 255, 0.2);
+      }
+
+      .progress-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #eee;
+        height: 6px; /* 进度条高度缩小 */
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      #progressBar {
+        width: 0%;
+        height: 100%;
+        background: var(--success-color);
+        transition: width 0.3s;
+      }
+
+      .stats-bar {
+        display: flex;
+        justify-content: center;
+        max-width: 800px;
+        margin: 5px auto; /* 减少间距 */
+        font-size: 0.85rem; /* 缩小统计文字 */
+      }
+
+      /* 表格样式 - 紧凑化，缩小字体和行高 */
+      .university-table {
+        width: 100%;
+        max-width: 1200px;
+        margin: 15px auto; /* 减少上下间距 */
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        font-size: 13px; /* 表格字体缩小 */
+      }
+
+      .university-table th,
+      .university-table td {
+        padding: 6px 10px; /* 大幅减少单元格内边距 */
+        text-align: left;
+        border-bottom: 1px solid var(--light-gray);
+        line-height: 1.3; /* 紧凑行高 */
+      }
+
+      .university-table th {
+        background-color: #f1f3f5;
+        font-weight: 600;
+        font-size: 12px; /* 表头字体更小 */
+      }
+
+      .university-table tr:hover {
+        background-color: #f8f9fa;
+      }
+
+      .dept-cell {
+        width: 160px; /* 轻微缩小列宽 */
+      }
+
+      .city-cell {
+        width: 100px; /* 轻微缩小列宽 */
+      }
+
+      .name-cell {
+        font-weight: 500;
+      }
+
+      .university-table .done {
+        background-color: rgba(40, 167, 69, 0.1);
+      }
+
+      .university-table .done .name-cell {
+        color: var(--success-color);
+        text-decoration: line-through;
+      }
+
+      .university-table .revealed {
+        background-color: rgba(220, 53, 69, 0.1);
+      }
+
+      .university-table .revealed .name-cell {
+        color: var(--danger-color);
+      }
+
+      button {
+        padding: 6px 18px; /* 缩小按钮内边距 */
+        border-radius: 18px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.2s;
+        font-size: 13px; /* 按钮字体缩小 */
+      }
+
+      button:hover {
+        opacity: 0.9;
+        transform: translateY(-1px); /* 轻微悬浮效果 */
+      }
+
+      #endBtn {
+        background: var(--gray-color);
+        color: white;
+      }
+
+      #restartBtn {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .message-tip {
+        height: 20px; /* 缩小提示框高度 */
+        font-size: 13px; /* 提示文字缩小 */
+        margin: 3px 0; /* 减少间距 */
+        text-align: center;
+        font-weight: bold;
+      }
+
+      .return-home {
+        position: absolute;
+        top: 8px; /* 适配header内边距 */
+        left: 10px;
+        padding: 4px 10px; /* 缩小返回按钮 */
+        border-radius: 12px;
+        border: none;
+        background: #6c757d;
+        color: white;
+        cursor: pointer;
+        font-size: 12px; /* 返回按钮字体缩小 */
+        z-index: 10;
+      }
+
+      /* 结果区域 - 轻微缩小字体 */
+      .result-area {
+        max-width: 800px;
+        margin: 20px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        font-size: 14px;
+      }
+
+      .stat-box {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 15px 0;
+        line-height: 1.6;
+        font-size: 13px;
+      }
+
+      .stat-box span {
+        font-weight: bold;
+        color: var(--primary-color);
+        font-size: 1.2em;
+      }
+
+      /* 响应式适配 - 保持紧凑 */
+      @media (max-width: 768px) {
+        .university-table {
+          font-size: 12px;
+        }
+
+        input {
+          width: 100%;
+          max-width: 260px;
+        }
+
+        .input-group {
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .header-sticky {
+          padding: 6px 8px;
+        }
+
+        body {
+          padding-top: 110px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header-sticky">
+      <button class="return-home" onclick="window.location.href='index.html'">
+        ← 首页
+      </button>
+
+      <div class="header-content">
+        <h2>请输入本科大学名称 (<span id="countInfo">0/0</span>)</h2>
+        <div class="input-group">
+          <input
+            id="answerInput"
+            type="text"
+            placeholder="输入大学名称，回车确认..."
+            autofocus
+          />
+          <button onclick="endQuiz()" id="endBtn">提交并查看结果</button>
+          <button onclick="restartQuiz()" class="hidden" id="restartBtn">
+            重新开始
+          </button>
+        </div>
+        <div class="message-tip" id="message"></div>
+        <div class="progress-container">
+          <div id="progressBar"></div>
+        </div>
+        <div class="stats-bar">
+          <div>已答对: <span id="correctCount">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 表格：仅保留主管单位、所在城市、大学名称 -->
+    <table class="university-table">
+      <thead>
+        <tr>
+          <th class="dept-cell">主管单位</th>
+          <th class="city-cell">所在城市</th>
+          <th>大学名称</th>
+        </tr>
+      </thead>
+      <tbody id="universityTableBody">
+        <tr>
+          <td
+            colspan="3"
+            style="text-align: center; color: #999; font-size: 12px"
+          >
+            请先加载大学名单
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="result-area hidden" id="resultArea">
+      <h3>全国本科大学识名挑战结果</h3>
+      <div class="stat-box" id="statSummary"></div>
+      <div style="margin-top: 15px">
+        <button onclick="restartQuiz()" id="finalRestartBtn">重新挑战</button>
+        <button
+          onclick="window.location.href='index.html'"
+          style="
+            margin-left: 8px;
+            background: #6c757d;
+            color: white;
+            font-size: 13px;
+            padding: 6px 16px;
+          "
+        >
+          返回首页
+        </button>
+      </div>
+    </div>
+
+    <!-- 引入转换后的大学数据 -->
+    <script src="university-data.js"></script>
+
+    <script>
+      // 全局变量
+      let userCorrectIndexes = [];
+      let ended = false;
+
+      // DOM元素
+      const inputBox = document.getElementById("answerInput");
+      const message = document.getElementById("message");
+      const countInfo = document.getElementById("countInfo");
+      const progressBar = document.getElementById("progressBar");
+      const correctCount = document.getElementById("correctCount");
+      const universityTableBody = document.getElementById(
+        "universityTableBody"
+      );
+      const resultArea = document.getElementById("resultArea");
+      const statSummary = document.getElementById("statSummary");
+      const endBtn = document.getElementById("endBtn");
+      const restartBtn = document.getElementById("restartBtn");
+
+      // 初始化表格
+      function initTable() {
+        if (!universityData || universityData.length === 0) return;
+
+        universityTableBody.innerHTML = "";
+        universityData.forEach((uni, index) => {
+          const tr = document.createElement("tr");
+          tr.id = `uni-row-${index}`;
+
+          tr.innerHTML = `
+                <td class="dept-cell">${uni.department}</td>
+                <td class="city-cell">${uni.city}</td>
+                <td class="name-cell">■■■■■■</td>
+            `;
+          universityTableBody.appendChild(tr);
+        });
+        updateProgress();
+      }
+
+      // 答题校验
+      inputBox.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !ended) checkAnswer();
+      });
+
+      function checkAnswer() {
+        if (!universityData || universityData.length === 0) {
+          message.innerHTML = `<span style="color:orange">⚠ 请先加载大学名单</span>`;
+          return;
+        }
+
+        const input = inputBox.value.trim().replace(/\s+/g, "").toLowerCase();
+        if (!input) {
+          message.innerHTML = `<span style="color:orange">⚠ 请输入大学名称</span>`;
+          return;
+        }
+
+        // 匹配大学名称（忽略空格、大小写）
+        let foundIndex = universityData.findIndex(
+          (uni) => uni.name.replace(/\s+/g, "").toLowerCase() === input
+        );
+
+        if (foundIndex !== -1) {
+          if (!userCorrectIndexes.includes(foundIndex)) {
+            userCorrectIndexes.push(foundIndex);
+            const row = document.getElementById(`uni-row-${foundIndex}`);
+            row.classList.add("done");
+            row.querySelector(".name-cell").textContent =
+              universityData[foundIndex].name;
+
+            message.innerHTML = `<span style="color:var(--success-color)">✔ 答对了！${universityData[foundIndex].name}</span>`;
+            row.scrollIntoView({ behavior: "smooth", block: "center" });
+          } else {
+            message.innerHTML = `<span style="color:orange">⚠ 你已经答对过这所大学了</span>`;
+          }
+        } else {
+          message.innerHTML = `<span style="color:var(--danger-color)">✘ 未匹配到该大学，请检查名称</span>`;
+        }
+
+        inputBox.value = "";
+        updateProgress();
+      }
+
+      // 更新进度
+      function updateProgress() {
+        if (!universityData || universityData.length === 0) return;
+
+        const correctNum = userCorrectIndexes.length;
+        const totalNum = universityData.length;
+
+        countInfo.textContent = `${correctNum}/${totalNum}`;
+        correctCount.textContent = correctNum;
+        const progressPercent = (correctNum / totalNum) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        // 全部答对自动提交
+        if (correctNum === totalNum) endQuiz();
+      }
+
+      // 计算百分位（简化版）
+      function calculatePercentile(score, total) {
+        const ratio = score / total;
+        if (ratio >= 0.9) return 95;
+        if (ratio >= 0.8) return 85;
+        if (ratio >= 0.7) return 70;
+        if (ratio >= 0.6) return 55;
+        if (ratio >= 0.5) return 40;
+        return Math.round(ratio * 100 * 0.5);
+      }
+
+      // 结束答题
+      function endQuiz() {
+        if (ended || !universityData || universityData.length === 0) return;
+        ended = true;
+
+        inputBox.disabled = true;
+        endBtn.classList.add("hidden");
+        restartBtn.classList.remove("hidden");
+
+        // 显示所有大学名称
+        universityData.forEach((uni, index) => {
+          const row = document.getElementById(`uni-row-${index}`);
+          row.querySelector(".name-cell").textContent = uni.name;
+
+          if (!userCorrectIndexes.includes(index)) {
+            row.classList.add("revealed");
+          }
+        });
+
+        // 统计结果
+        const score = userCorrectIndexes.length;
+        const total = universityData.length;
+        const scorePercent = Math.round((score / total) * 1000) / 10;
+        const percentile = calculatePercentile(score, total);
+
+        // 按城市统计答对数量
+        const cityStats = {};
+        userCorrectIndexes.forEach((index) => {
+          const city = universityData[index].city;
+          cityStats[city] = (cityStats[city] || 0) + 1;
+        });
+        // 找出答对最多的城市
+        const topCity = Object.entries(cityStats).sort(
+          (a, b) => b[1] - a[1]
+        )[0] || ["无", 0];
+
+        // 按主管单位统计答对数量
+        const deptStats = {};
+        userCorrectIndexes.forEach((index) => {
+          const dept = universityData[index].department;
+          deptStats[dept] = (deptStats[dept] || 0) + 1;
+        });
+        const topDept = Object.entries(deptStats).sort(
+          (a, b) => b[1] - a[1]
+        )[0] || ["无", 0];
+
+        statSummary.innerHTML = `
+            <div style="margin-bottom:10px; font-size:1.1rem;">
+                你的最终得分：<span>${score}</span> / ${total}
+            </div>
+            <div>正确率：<span>${scorePercent}%</span></div>
+            <div>超过了 <span>${percentile}%</span> 的挑战者</div>
+            <div>答对最多的城市：<span>${topCity[0]}</span>（${topCity[1]}所）</div>
+            <div>答对最多的主管单位：<span>${topDept[0]}</span>（${topDept[1]}所）</div>
+        `;
+
+        resultArea.classList.remove("hidden");
+        resultArea.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      // 重新开始
+      function restartQuiz() {
+        userCorrectIndexes = [];
+        ended = false;
+
+        inputBox.disabled = false;
+        inputBox.value = "";
+        message.innerHTML = "";
+        endBtn.classList.remove("hidden");
+        restartBtn.classList.add("hidden");
+        resultArea.classList.add("hidden");
+
+        initTable();
+        inputBox.focus();
+      }
+
+      // 页面加载完成后初始化
+      window.onload = function () {
+        if (
+          typeof universityData !== "undefined" &&
+          universityData.length > 0
+        ) {
+          initTable();
+          inputBox.focus();
+        }
+      };
+    </script>
+  </body>
+</html>
