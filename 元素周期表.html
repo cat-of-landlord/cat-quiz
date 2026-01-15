@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>元素周期表识名挑战</title>
+    <style>
+      :root {
+        /* 元素类型配色（经典周期表风格） */
+        --alkali: #e74c3c; /* 碱金属-红 */
+        --alkaline-earth: #f39c12; /* 碱土金属-橙黄 */
+        --transition: #f3a6b2; /* 过渡金属-浅粉 */
+        --post-transition: #95a5a6; /* 后过渡金属-灰 */
+        --metalloid: #9b59b6; /* 类金属-紫 */
+        --nonmetal: #27ae60; /* 非金属-绿 */
+        --halogen: #f1c40f; /* 卤素-亮黄 */
+        --noble: #3498db; /* 稀有气体-蓝 */
+        --lanthanide: #d35400; /* 镧系-橙红 */
+        --actinide: #8e44ad; /* 锕系-深紫 */
+        --unknown: #bdc3c7; /* 未知类型-浅灰 */
+        --border: #ddd;
+        --hidden-bg: #f0f0f0; /* 未答背景 */
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #f8f9fa;
+        color: #333;
+        padding: 130px 10px 20px;
+        font-size: 14px;
+      }
+
+      /* 顶部Header（紧凑布局） */
+      .header-sticky {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 8px 10px;
+      }
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .header-sticky h2 {
+        margin: 0 0 8px 0;
+        font-size: 1.1rem;
+        text-align: center;
+      }
+      .input-group {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+      }
+      input {
+        padding: 8px 12px;
+        font-size: 14px;
+        width: 280px;
+        border: 2px solid #ddd;
+        border-radius: 20px;
+        outline: none;
+        transition: border 0.3s;
+      }
+      input:focus {
+        border-color: var(--noble);
+        box-shadow: 0 0 6px rgba(52, 152, 219, 0.2);
+      }
+      .progress-container {
+        max-width: 600px;
+        margin: 0 auto;
+        height: 6px;
+        background: #eee;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      #progressBar {
+        width: 0%;
+        height: 100%;
+        background: var(--nonmetal);
+        transition: width 0.3s;
+      }
+      .stats-bar {
+        display: flex;
+        justify-content: center;
+        margin: 5px auto;
+        font-size: 0.85rem;
+      }
+      .return-home {
+        position: absolute;
+        top: 8px;
+        left: 10px;
+        padding: 4px 10px;
+        border-radius: 12px;
+        border: none;
+        background: #6c757d;
+        color: white;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .message-tip {
+        height: 20px;
+        font-size: 13px;
+        margin: 3px 0;
+        text-align: center;
+        font-weight: bold;
+      }
+      button {
+        padding: 6px 18px;
+        border-radius: 18px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 13px;
+        transition: opacity 0.2s;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      #endBtn {
+        background: #6c757d;
+        color: white;
+      }
+      #restartBtn {
+        background: var(--noble);
+        color: white;
+        display: none;
+      }
+      .hidden {
+        display: none;
+      }
+      .show {
+        display: inline-block;
+      }
+
+      /* 周期表主表：CSS Grid实现经典7行18列布局 */
+      .periodic-table {
+        max-width: 1200px;
+        margin: 20px auto;
+        display: grid;
+        grid-template-rows: repeat(7, 60px); /* 7个周期 */
+        grid-template-columns: repeat(18, 60px); /* 18个族 */
+        gap: 2px;
+        justify-content: center;
+      }
+
+      /* 镧系/锕系容器（单独展示） */
+      .lanthanide-actinide {
+        max-width: 1200px;
+        margin: 20px auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .lanthanide-group,
+      .actinide-group {
+        display: grid;
+        grid-template-columns: repeat(15, 60px); /* 15个元素/系 */
+        gap: 2px;
+        justify-content: center;
+      }
+      .lanthanide-group h3,
+      .actinide-group h3 {
+        grid-column: 1 / -1;
+        text-align: center;
+        font-size: 1rem;
+        color: var(--lanthanide);
+        margin: 5px 0;
+      }
+      .actinide-group h3 {
+        color: var(--actinide);
+      }
+
+      /* 元素单元格基础样式 */
+      .element-cell {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2px;
+        position: relative;
+        transition: all 0.3s;
+        background: var(--hidden-bg);
+      }
+      /* 未答元素：按类型显示淡色背景 */
+      .element-cell.alkali {
+        background: rgba(231, 76, 60, 0.2);
+      }
+      .element-cell.alkaline-earth {
+        background: rgba(243, 156, 18, 0.2);
+      }
+      .element-cell.transition {
+        background: rgba(243, 166, 178, 0.2);
+      }
+      .element-cell.post-transition {
+        background: rgba(149, 165, 166, 0.2);
+      }
+      .element-cell.metalloid {
+        background: rgba(155, 89, 182, 0.2);
+      }
+      .element-cell.nonmetal {
+        background: rgba(39, 174, 96, 0.2);
+      }
+      .element-cell.halogen {
+        background: rgba(241, 196, 15, 0.2);
+      }
+      .element-cell.noble {
+        background: rgba(52, 152, 219, 0.2);
+      }
+      .element-cell.lanthanide {
+        background: rgba(211, 84, 0, 0.2);
+      }
+      .element-cell.actinide {
+        background: rgba(142, 68, 173, 0.2);
+      }
+      .element-cell.unknown {
+        background: rgba(189, 195, 199, 0.2);
+      }
+
+      /* 已答元素：深色背景+显示内容 */
+      .element-cell.revealed {
+        border-color: #27ae60;
+        box-shadow: 0 0 5px rgba(39, 174, 96, 0.3);
+      }
+      .element-cell.revealed.alkali {
+        background: var(--alkali);
+        color: white;
+      }
+      .element-cell.revealed.alkaline-earth {
+        background: var(--alkaline-earth);
+        color: #333;
+      }
+      .element-cell.revealed.transition {
+        background: var(--transition);
+        color: #333;
+      }
+      .element-cell.revealed.post-transition {
+        background: var(--post-transition);
+        color: white;
+      }
+      .element-cell.revealed.metalloid {
+        background: var(--metalloid);
+        color: white;
+      }
+      .element-cell.revealed.nonmetal {
+        background: var(--nonmetal);
+        color: white;
+      }
+      .element-cell.revealed.halogen {
+        background: var(--halogen);
+        color: #333;
+      }
+      .element-cell.revealed.noble {
+        background: var(--noble);
+        color: white;
+      }
+      .element-cell.revealed.lanthanide {
+        background: var(--lanthanide);
+        color: white;
+      }
+      .element-cell.revealed.actinide {
+        background: var(--actinide);
+        color: white;
+      }
+      .element-cell.revealed.unknown {
+        background: var(--unknown);
+        color: #333;
+      }
+
+      /* 单元格内容：原子序数始终显示，符号+中文答对后显示 */
+      .element-num {
+        font-size: 10px;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        font-weight: bold;
+      }
+      .element-symbol {
+        font-size: 16px;
+        font-weight: bold;
+        display: none;
+      }
+      .element-cn {
+        font-size: 12px;
+        display: none;
+      }
+      .element-cell.revealed .element-symbol,
+      .element-cell.revealed .element-cn {
+        display: block;
+      }
+
+      /* 空占位格（周期表空白处） */
+      .empty-cell {
+        background: #ecf0f1;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #666;
+      }
+
+      /* 响应式适配（小屏幕缩小单元格） */
+      @media (max-width: 1200px) {
+        .periodic-table {
+          grid-template-rows: repeat(7, 50px);
+          grid-template-columns: repeat(18, 50px);
+        }
+        .lanthanide-group,
+        .actinide-group {
+          grid-template-columns: repeat(15, 50px);
+        }
+        .element-symbol {
+          font-size: 14px;
+        }
+        .element-cn {
+          font-size: 10px;
+        }
+      }
+      @media (max-width: 900px) {
+        .periodic-table {
+          grid-template-rows: repeat(7, 40px);
+          grid-template-columns: repeat(18, 40px);
+        }
+        .lanthanide-group,
+        .actinide-group {
+          grid-template-columns: repeat(15, 40px);
+        }
+        .element-num {
+          font-size: 8px;
+        }
+      }
+      @media (max-width: 700px) {
+        body {
+          padding-top: 110px;
+        }
+        .periodic-table {
+          grid-template-rows: repeat(7, 35px);
+          grid-template-columns: repeat(18, 35px);
+        }
+        .lanthanide-group,
+        .actinide-group {
+          grid-template-columns: repeat(15, 35px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header-sticky">
+      <button class="return-home" onclick="window.location.href='index.html'">
+        ← 首页
+      </button>
+      <div class="header-content">
+        <h2>元素周期表识名挑战 (<span id="countInfo">0/118</span>)</h2>
+        <div class="input-group">
+          <input
+            id="answerInput"
+            type="text"
+            placeholder="输入元素中文/英文/符号，回车确认..."
+            autofocus
+          />
+          <button onclick="endQuiz()" id="endBtn">提交结果</button>
+          <button onclick="restartQuiz()" id="restartBtn" class="hidden">
+            重新开始
+          </button>
+        </div>
+        <div class="message-tip" id="message"></div>
+        <div class="progress-container">
+          <div id="progressBar"></div>
+        </div>
+        <div class="stats-bar">
+          <div>已答对: <span id="correctCount">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 周期表主表 -->
+    <div class="periodic-table" id="periodicTable"></div>
+
+    <!-- 镧系+锕系（单独展示） -->
+    <div class="lanthanide-actinide">
+      <div class="lanthanide-group" id="lanthanideGroup">
+        <h3>镧系元素</h3>
+      </div>
+      <div class="actinide-group" id="actinideGroup">
+        <h3>锕系元素</h3>
+      </div>
+    </div>
+
+    <script>
+      // ********** 1. 118个元素完整数据 **********
+      const elements = [
+        // 周期1
+        {
+          num: 1,
+          cn: "氢",
+          en: "Hydrogen",
+          symbol: "H",
+          period: 1,
+          group: 1,
+          type: "nonmetal",
+        },
+        {
+          num: 2,
+          cn: "氦",
+          en: "Helium",
+          symbol: "He",
+          period: 1,
+          group: 18,
+          type: "noble",
+        },
+        // 周期2
+        {
+          num: 3,
+          cn: "锂",
+          en: "Lithium",
+          symbol: "Li",
+          period: 2,
+          group: 1,
+          type: "alkali",
+        },
+        {
+          num: 4,
+          cn: "铍",
+          en: "Beryllium",
+          symbol: "Be",
+          period: 2,
+          group: 2,
+          type: "alkaline-earth",
+        },
+        {
+          num: 5,
+          cn: "硼",
+          en: "Boron",
+          symbol: "B",
+          period: 2,
+          group: 13,
+          type: "metalloid",
+        },
+        {
+          num: 6,
+          cn: "碳",
+          en: "Carbon",
+          symbol: "C",
+          period: 2,
+          group: 14,
+          type: "nonmetal",
+        },
+        {
+          num: 7,
+          cn: "氮",
+          en: "Nitrogen",
+          symbol: "N",
+          period: 2,
+          group: 15,
+          type: "nonmetal",
+        },
+        {
+          num: 8,
+          cn: "氧",
+          en: "Oxygen",
+          symbol: "O",
+          period: 2,
+          group: 16,
+          type: "nonmetal",
+        },
+        {
+          num: 9,
+          cn: "氟",
+          en: "Fluorine",
+          symbol: "F",
+          period: 2,
+          group: 17,
+          type: "halogen",
+        },
+        {
+          num: 10,
+          cn: "氖",
+          en: "Neon",
+          symbol: "Ne",
+          period: 2,
+          group: 18,
+          type: "noble",
+        },
+        // 周期3
+        {
+          num: 11,
+          cn: "钠",
+          en: "Sodium",
+          symbol: "Na",
+          period: 3,
+          group: 1,
+          type: "alkali",
+        },
+        {
+          num: 12,
+          cn: "镁",
+          en: "Magnesium",
+          symbol: "Mg",
+          period: 3,
+          group: 2,
+          type: "alkaline-earth",
+        },
+        {
+          num: 13,
+          cn: "铝",
+          en: "Aluminum",
+          symbol: "Al",
+          period: 3,
+          group: 13,
+          type: "post-transition",
+        },
+        {
+          num: 14,
+          cn: "硅",
+          en: "Silicon",
+          symbol: "Si",
+          period: 3,
+          group: 14,
+          type: "metalloid",
+        },
+        {
+          num: 15,
+          cn: "磷",
+          en: "Phosphorus",
+          symbol: "P",
+          period: 3,
+          group: 15,
+          type: "nonmetal",
+        },
+        {
+          num: 16,
+          cn: "硫",
+          en: "Sulfur",
+          symbol: "S",
+          period: 3,
+          group: 16,
+          type: "nonmetal",
+        },
+        {
+          num: 17,
+          cn: "氯",
+          en: "Chlorine",
+          symbol: "Cl",
+          period: 3,
+          group: 17,
+          type: "halogen",
+        },
+        {
+          num: 18,
+          cn: "氩",
+          en: "Argon",
+          symbol: "Ar",
+          period: 3,
+          group: 18,
+          type: "noble",
+        },
+        // 周期4
+        {
+          num: 19,
+          cn: "钾",
+          en: "Potassium",
+          symbol: "K",
+          period: 4,
+          group: 1,
+          type: "alkali",
+        },
+        {
+          num: 20,
+          cn: "钙",
+          en: "Calcium",
+          symbol: "Ca",
+          period: 4,
+          group: 2,
+          type: "alkaline-earth",
+        },
+        {
+          num: 21,
+          cn: "钪",
+          en: "Scandium",
+          symbol: "Sc",
+          period: 4,
+          group: 3,
+          type: "transition",
+        },
+        {
+          num: 22,
+          cn: "钛",
+          en: "Titanium",
+          symbol: "Ti",
+          period: 4,
+          group: 4,
+          type: "transition",
+        },
+        {
+          num: 23,
+          cn: "钒",
+          en: "Vanadium",
+          symbol: "V",
+          period: 4,
+          group: 5,
+          type: "transition",
+        },
+        {
+          num: 24,
+          cn: "铬",
+          en: "Chromium",
+          symbol: "Cr",
+          period: 4,
+          group: 6,
+          type: "transition",
+        },
+        {
+          num: 25,
+          cn: "锰",
+          en: "Manganese",
+          symbol: "Mn",
+          period: 4,
+          group: 7,
+          type: "transition",
+        },
+        {
+          num: 26,
+          cn: "铁",
+          en: "Iron",
+          symbol: "Fe",
+          period: 4,
+          group: 8,
+          type: "transition",
+        },
+        {
+          num: 27,
+          cn: "钴",
+          en: "Cobalt",
+          symbol: "Co",
+          period: 4,
+          group: 9,
+          type: "transition",
+        },
+        {
+          num: 28,
+          cn: "镍",
+          en: "Nickel",
+          symbol: "Ni",
+          period: 4,
+          group: 10,
+          type: "transition",
+        },
+        {
+          num: 29,
+          cn: "铜",
+          en: "Copper",
+          symbol: "Cu",
+          period: 4,
+          group: 11,
+          type: "transition",
+        },
+        {
+          num: 30,
+          cn: "锌",
+          en: "Zinc",
+          symbol: "Zn",
+          period: 4,
+          group: 12,
+          type: "transition",
+        },
+        {
+          num: 31,
+          cn: "镓",
+          en: "Gallium",
+          symbol: "Ga",
+          period: 4,
+          group: 13,
+          type: "post-transition",
+        },
+        {
+          num: 32,
+          cn: "锗",
+          en: "Germanium",
+          symbol: "Ge",
+          period: 4,
+          group: 14,
+          type: "metalloid",
+        },
+        {
+          num: 33,
+          cn: "砷",
+          en: "Arsenic",
+          symbol: "As",
+          period: 4,
+          group: 15,
+          type: "metalloid",
+        },
+        {
+          num: 34,
+          cn: "硒",
+          en: "Selenium",
+          symbol: "Se",
+          period: 4,
+          group: 16,
+          type: "nonmetal",
+        },
+        {
+          num: 35,
+          cn: "溴",
+          en: "Bromine",
+          symbol: "Br",
+          period: 4,
+          group: 17,
+          type: "halogen",
+        },
+        {
+          num: 36,
+          cn: "氪",
+          en: "Krypton",
+          symbol: "Kr",
+          period: 4,
+          group: 18,
+          type: "noble",
+        },
+        // 周期5
+        {
+          num: 37,
+          cn: "铷",
+          en: "Rubidium",
+          symbol: "Rb",
+          period: 5,
+          group: 1,
+          type: "alkali",
+        },
+        {
+          num: 38,
+          cn: "锶",
+          en: "Strontium",
+          symbol: "Sr",
+          period: 5,
+          group: 2,
+          type: "alkaline-earth",
+        },
+        {
+          num: 39,
+          cn: "钇",
+          en: "Yttrium",
+          symbol: "Y",
+          period: 5,
+          group: 3,
+          type: "transition",
+        },
+        {
+          num: 40,
+          cn: "锆",
+          en: "Zirconium",
+          symbol: "Zr",
+          period: 5,
+          group: 4,
+          type: "transition",
+        },
+        {
+          num: 41,
+          cn: "铌",
+          en: "Niobium",
+          symbol: "Nb",
+          period: 5,
+          group: 5,
+          type: "transition",
+        },
+        {
+          num: 42,
+          cn: "钼",
+          en: "Molybdenum",
+          symbol: "Mo",
+          period: 5,
+          group: 6,
+          type: "transition",
+        },
+        {
+          num: 43,
+          cn: "锝",
+          en: "Technetium",
+          symbol: "Tc",
+          period: 5,
+          group: 7,
+          type: "transition",
+        },
+        {
+          num: 44,
+          cn: "钌",
+          en: "Ruthenium",
+          symbol: "Ru",
+          period: 5,
+          group: 8,
+          type: "transition",
+        },
+        {
+          num: 45,
+          cn: "铑",
+          en: "Rhodium",
+          symbol: "Rh",
+          period: 5,
+          group: 9,
+          type: "transition",
+        },
+        {
+          num: 46,
+          cn: "钯",
+          en: "Palladium",
+          symbol: "Pd",
+          period: 5,
+          group: 10,
+          type: "transition",
+        },
+        {
+          num: 47,
+          cn: "银",
+          en: "Silver",
+          symbol: "Ag",
+          period: 5,
+          group: 11,
+          type: "transition",
+        },
+        {
+          num: 48,
+          cn: "镉",
+          en: "Cadmium",
+          symbol: "Cd",
+          period: 5,
+          group: 12,
+          type: "transition",
+        },
+        {
+          num: 49,
+          cn: "铟",
+          en: "Indium",
+          symbol: "In",
+          period: 5,
+          group: 13,
+          type: "post-transition",
+        },
+        {
+          num: 50,
+          cn: "锡",
+          en: "Tin",
+          symbol: "Sn",
+          period: 5,
+          group: 14,
+          type: "post-transition",
+        },
+        {
+          num: 51,
+          cn: "锑",
+          en: "Antimony",
+          symbol: "Sb",
+          period: 5,
+          group: 15,
+          type: "metalloid",
+        },
+        {
+          num: 52,
+          cn: "碲",
+          en: "Tellurium",
+          symbol: "Te",
+          period: 5,
+          group: 16,
+          type: "metalloid",
+        },
+        {
+          num: 53,
+          cn: "碘",
+          en: "Iodine",
+          symbol: "I",
+          period: 5,
+          group: 17,
+          type: "halogen",
+        },
+        {
+          num: 54,
+          cn: "氙",
+          en: "Xenon",
+          symbol: "Xe",
+          period: 5,
+          group: 18,
+          type: "noble",
+        },
+        // 周期6（镧系57-71单独展示）
+        {
+          num: 55,
+          cn: "铯",
+          en: "Cesium",
+          symbol: "Cs",
+          period: 6,
+          group: 1,
+          type: "alkali",
+        },
+        {
+          num: 56,
+          cn: "钡",
+          en: "Barium",
+          symbol: "Ba",
+          period: 6,
+          group: 2,
+          type: "alkaline-earth",
+        },
+        {
+          num: 57,
+          cn: "镧",
+          en: "Lanthanum",
+          symbol: "La",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 58,
+          cn: "铈",
+          en: "Cerium",
+          symbol: "Ce",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 59,
+          cn: "镨",
+          en: "Praseodymium",
+          symbol: "Pr",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 60,
+          cn: "钕",
+          en: "Neodymium",
+          symbol: "Nd",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 61,
+          cn: "钷",
+          en: "Promethium",
+          symbol: "Pm",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 62,
+          cn: "钐",
+          en: "Samarium",
+          symbol: "Sm",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 63,
+          cn: "铕",
+          en: "Europium",
+          symbol: "Eu",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 64,
+          cn: "钆",
+          en: "Gadolinium",
+          symbol: "Gd",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 65,
+          cn: "铽",
+          en: "Terbium",
+          symbol: "Tb",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 66,
+          cn: "镝",
+          en: "Dysprosium",
+          symbol: "Dy",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 67,
+          cn: "钬",
+          en: "Holmium",
+          symbol: "Ho",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 68,
+          cn: "铒",
+          en: "Erbium",
+          symbol: "Er",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 69,
+          cn: "铥",
+          en: "Thulium",
+          symbol: "Tm",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 70,
+          cn: "镱",
+          en: "Ytterbium",
+          symbol: "Yb",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 71,
+          cn: "镥",
+          en: "Lutetium",
+          symbol: "Lu",
+          period: 6,
+          group: 3,
+          type: "lanthanide",
+        },
+        {
+          num: 72,
+          cn: "铪",
+          en: "Hafnium",
+          symbol: "Hf",
+          period: 6,
+          group: 4,
+          type: "transition",
+        },
+        {
+          num: 73,
+          cn: "钽",
+          en: "Tantalum",
+          symbol: "Ta",
+          period: 6,
+          group: 5,
+          type: "transition",
+        },
+        {
+          num: 74,
+          cn: "钨",
+          en: "Tungsten",
+          symbol: "W",
+          period: 6,
+          group: 6,
+          type: "transition",
+        },
+        {
+          num: 75,
+          cn: "铼",
+          en: "Rhenium",
+          symbol: "Re",
+          period: 6,
+          group: 7,
+          type: "transition",
+        },
+        {
+          num: 76,
+          cn: "锇",
+          en: "Osmium",
+          symbol: "Os",
+          period: 6,
+          group: 8,
+          type: "transition",
+        },
+        {
+          num: 77,
+          cn: "铱",
+          en: "Iridium",
+          symbol: "Ir",
+          period: 6,
+          group: 9,
+          type: "transition",
+        },
+        {
+          num: 78,
+          cn: "铂",
+          en: "Platinum",
+          symbol: "Pt",
+          period: 6,
+          group: 10,
+          type: "transition",
+        },
+        {
+          num: 79,
+          cn: "金",
+          en: "Gold",
+          symbol: "Au",
+          period: 6,
+          group: 11,
+          type: "transition",
+        },
+        {
+          num: 80,
+          cn: "汞",
+          en: "Mercury",
+          symbol: "Hg",
+          period: 6,
+          group: 12,
+          type: "transition",
+        },
+        {
+          num: 81,
+          cn: "铊",
+          en: "Thallium",
+          symbol: "Tl",
+          period: 6,
+          group: 13,
+          type: "post-transition",
+        },
+        {
+          num: 82,
+          cn: "铅",
+          en: "Lead",
+          symbol: "Pb",
+          period: 6,
+          group: 14,
+          type: "post-transition",
+        },
+        {
+          num: 83,
+          cn: "铋",
+          en: "Bismuth",
+          symbol: "Bi",
+          period: 6,
+          group: 15,
+          type: "post-transition",
+        },
+        {
+          num: 84,
+          cn: "钋",
+          en: "Polonium",
+          symbol: "Po",
+          period: 6,
+          group: 16,
+          type: "post-transition",
+        },
+        {
+          num: 85,
+          cn: "砹",
+          en: "Astatine",
+          symbol: "At",
+          period: 6,
+          group: 17,
+          type: "halogen",
+        },
+        {
+          num: 86,
+          cn: "氡",
+          en: "Radon",
+          symbol: "Rn",
+          period: 6,
+          group: 18,
+          type: "noble",
+        },
+        // 周期7（锕系89-103单独展示）
+        {
+          num: 87,
+          cn: "钫",
+          en: "Francium",
+          symbol: "Fr",
+          period: 7,
+          group: 1,
+          type: "alkali",
+        },
+        {
+          num: 88,
+          cn: "镭",
+          en: "Radium",
+          symbol: "Ra",
+          period: 7,
+          group: 2,
+          type: "alkaline-earth",
+        },
+        {
+          num: 89,
+          cn: "锕",
+          en: "Actinium",
+          symbol: "Ac",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 90,
+          cn: "钍",
+          en: "Thorium",
+          symbol: "Th",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 91,
+          cn: "镤",
+          en: "Protactinium",
+          symbol: "Pa",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 92,
+          cn: "铀",
+          en: "Uranium",
+          symbol: "U",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 93,
+          cn: "镎",
+          en: "Neptunium",
+          symbol: "Np",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 94,
+          cn: "钚",
+          en: "Plutonium",
+          symbol: "Pu",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 95,
+          cn: "镅",
+          en: "Americium",
+          symbol: "Am",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 96,
+          cn: "锔",
+          en: "Curium",
+          symbol: "Cm",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 97,
+          cn: "锫",
+          en: "Berkelium",
+          symbol: "Bk",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 98,
+          cn: "锎",
+          en: "Californium",
+          symbol: "Cf",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 99,
+          cn: "锿",
+          en: "Einsteinium",
+          symbol: "Es",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 100,
+          cn: "镄",
+          en: "Fermium",
+          symbol: "Fm",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 101,
+          cn: "钔",
+          en: "Mendelevium",
+          symbol: "Md",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 102,
+          cn: "锘",
+          en: "Nobelium",
+          symbol: "No",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 103,
+          cn: "铹",
+          en: "Lawrencium",
+          symbol: "Lr",
+          period: 7,
+          group: 3,
+          type: "actinide",
+        },
+        {
+          num: 104,
+          cn: "𬬻",
+          en: "Rutherfordium",
+          symbol: "Rf",
+          period: 7,
+          group: 4,
+          type: "transition",
+        },
+        {
+          num: 105,
+          cn: "𬭊",
+          en: "Dubnium",
+          symbol: "Db",
+          period: 7,
+          group: 5,
+          type: "transition",
+        },
+        {
+          num: 106,
+          cn: "𬭳",
+          en: "Seaborgium",
+          symbol: "Sg",
+          period: 7,
+          group: 6,
+          type: "transition",
+        },
+        {
+          num: 107,
+          cn: "𬭛",
+          en: "Bohrium",
+          symbol: "Bh",
+          period: 7,
+          group: 7,
+          type: "transition",
+        },
+        {
+          num: 108,
+          cn: "𬭶",
+          en: "Hassium",
+          symbol: "Hs",
+          period: 7,
+          group: 8,
+          type: "transition",
+        },
+        {
+          num: 109,
+          cn: "鿏",
+          en: "Meitnerium",
+          symbol: "Mt",
+          period: 7,
+          group: 9,
+          type: "transition",
+        },
+        {
+          num: 110,
+          cn: "𫟼",
+          en: "Darmstadtium",
+          symbol: "Ds",
+          period: 7,
+          group: 10,
+          type: "transition",
+        },
+        {
+          num: 111,
+          cn: "𬬭",
+          en: "Roentgenium",
+          symbol: "Rg",
+          period: 7,
+          group: 11,
+          type: "transition",
+        },
+        {
+          num: 112,
+          cn: "鿔",
+          en: "Copernicium",
+          symbol: "Cn",
+          period: 7,
+          group: 12,
+          type: "transition",
+        },
+        {
+          num: 113,
+          cn: "鿭",
+          en: "Nihonium",
+          symbol: "Nh",
+          period: 7,
+          group: 13,
+          type: "post-transition",
+        },
+        {
+          num: 114,
+          cn: "𫓧",
+          en: "Flerovium",
+          symbol: "Fl",
+          period: 7,
+          group: 14,
+          type: "post-transition",
+        },
+        {
+          num: 115,
+          cn: "镆",
+          en: "Moscovium",
+          symbol: "Mc",
+          period: 7,
+          group: 15,
+          type: "post-transition",
+        },
+        {
+          num: 116,
+          cn: "𫟷",
+          en: "Livermorium",
+          symbol: "Lv",
+          period: 7,
+          group: 16,
+          type: "post-transition",
+        },
+        {
+          num: 117,
+          cn: "鿬",
+          en: "Tennessine",
+          symbol: "Ts",
+          period: 7,
+          group: 17,
+          type: "halogen",
+        },
+        {
+          num: 118,
+          cn: "鿫",
+          en: "Oganesson",
+          symbol: "Og",
+          period: 7,
+          group: 18,
+          type: "noble",
+        },
+      ];
+
+      // ********** 2. 全局变量 **********
+      let correctElements = []; // 存储答对的元素num
+      const totalCount = elements.length; // 总元素数118
+      // DOM元素
+      const inputBox = document.getElementById("answerInput");
+      const message = document.getElementById("message");
+      const countInfo = document.getElementById("countInfo");
+      const progressBar = document.getElementById("progressBar");
+      const correctCount = document.getElementById("correctCount");
+      const periodicTable = document.getElementById("periodicTable");
+      const lanthanideGroup = document.getElementById("lanthanideGroup");
+      const actinideGroup = document.getElementById("actinideGroup");
+      const endBtn = document.getElementById("endBtn");
+      const restartBtn = document.getElementById("restartBtn");
+
+      // ********** 3. 初始化周期表 **********
+      function initPeriodicTable() {
+        // 清空容器
+        periodicTable.innerHTML = "";
+        lanthanideGroup.innerHTML = "<h3>镧系元素</h3>";
+        actinideGroup.innerHTML = "<h3>锕系元素</h3>";
+
+        // 步骤1：渲染主周期表（7行18列）
+        // 先填充空单元格
+        for (let period = 1; period <= 7; period++) {
+          for (let group = 1; group <= 18; group++) {
+            // 跳过镧系/锕系占位（周期6/7，第3族）
+            if ((period === 6 || period === 7) && group === 3) {
+              const emptyCell = document.createElement("div");
+              emptyCell.className = "empty-cell";
+              emptyCell.textContent = period === 6 ? "镧系" : "锕系";
+              emptyCell.style.gridRow = period;
+              emptyCell.style.gridColumn = group;
+              periodicTable.appendChild(emptyCell);
+              continue;
+            }
+
+            // 查找当前周期+族的元素
+            const element = elements.find(
+              (el) => el.period === period && el.group === group
+            );
+            if (element) {
+              // 渲染元素单元格
+              const cell = createElementCell(element);
+              cell.style.gridRow = period;
+              cell.style.gridColumn = group;
+              periodicTable.appendChild(cell);
+            } else {
+              // 空单元格
+              const emptyCell = document.createElement("div");
+              emptyCell.className = "empty-cell";
+              emptyCell.style.gridRow = period;
+              emptyCell.style.gridColumn = group;
+              periodicTable.appendChild(emptyCell);
+            }
+          }
+        }
+
+        // 步骤2：渲染镧系（57-71）
+        const lanthanides = elements.filter((el) => el.type === "lanthanide");
+        lanthanides.forEach((el) => {
+          const cell = createElementCell(el);
+          lanthanideGroup.appendChild(cell);
+        });
+
+        // 步骤3：渲染锕系（89-103）
+        const actinides = elements.filter((el) => el.type === "actinide");
+        actinides.forEach((el) => {
+          const cell = createElementCell(el);
+          actinideGroup.appendChild(cell);
+        });
+
+        // 更新进度显示
+        updateProgress();
+      }
+
+      // 创建单个元素单元格
+      function createElementCell(element) {
+        const cell = document.createElement("div");
+        cell.className = `element-cell ${element.type}`;
+        cell.id = `element-${element.num}`; // 唯一标识：element-1, element-2...
+
+        // 原子序数（始终显示）
+        const numEl = document.createElement("div");
+        numEl.className = "element-num";
+        numEl.textContent = element.num;
+
+        // 元素符号（答对后显示）
+        const symbolEl = document.createElement("div");
+        symbolEl.className = "element-symbol";
+        symbolEl.textContent = element.symbol;
+
+        // 中文名称（答对后显示）
+        const cnEl = document.createElement("div");
+        cnEl.className = "element-cn";
+        cnEl.textContent = element.cn;
+
+        // 组装单元格
+        cell.appendChild(numEl);
+        cell.appendChild(symbolEl);
+        cell.appendChild(cnEl);
+
+        // 如果已答对，标记为revealed
+        if (correctElements.includes(element.num)) {
+          cell.classList.add("revealed");
+        }
+
+        return cell;
+      }
+
+      // ********** 4. 答题校验逻辑 **********
+      function checkAnswer() {
+        const input = inputBox.value.trim().toLowerCase().replace(/\s+/g, "");
+        if (!input) {
+          message.innerHTML = `<span style="color:orange">⚠ 请输入元素名称/符号</span>`;
+          return;
+        }
+
+        // 查找匹配的元素（支持中文、英文、符号，忽略大小写/空格）
+        const matchedElement = elements.find(
+          (el) =>
+            el.cn.toLowerCase() === input ||
+            el.en.toLowerCase() === input ||
+            el.symbol.toLowerCase() === input
+        );
+
+        if (matchedElement) {
+          const num = matchedElement.num;
+          if (correctElements.includes(num)) {
+            // 已答对过
+            message.innerHTML = `<span style="color:orange">⚠ 你已经答对「${matchedElement.cn}(${matchedElement.symbol})」了</span>`;
+          } else {
+            // 答对新元素
+            correctElements.push(num);
+            // 标记单元格为已答
+            const cell = document.getElementById(`element-${num}`);
+            if (cell) cell.classList.add("revealed");
+            // 滚动到该元素
+            cell.scrollIntoView({ behavior: "smooth", block: "center" });
+            // 提示信息
+            message.innerHTML = `<span style="color:#27ae60">✔ 答对了！${matchedElement.cn} (${matchedElement.symbol})</span>`;
+            // 更新进度
+            updateProgress();
+
+            // 全部答对自动提交
+            if (correctElements.length === totalCount) {
+              endQuiz();
+            }
+          }
+        } else {
+          // 未匹配到
+          message.innerHTML = `<span style="color:#e74c3c">✘ 未匹配到该元素，请检查输入</span>`;
+        }
+
+        // 清空输入框
+        inputBox.value = "";
+      }
+
+      // ********** 5. 更新进度条/统计信息 **********
+      function updateProgress() {
+        const correctNum = correctElements.length;
+        // 更新文本统计
+        countInfo.textContent = `${correctNum}/${totalCount}`;
+        correctCount.textContent = correctNum;
+        // 更新进度条
+        const progress = (correctNum / totalCount) * 100;
+        progressBar.style.width = `${progress}%`;
+      }
+
+      // ********** 6. 结束答题（显示所有未答元素） **********
+      function endQuiz() {
+        // 禁用输入和提交按钮
+        inputBox.disabled = true;
+        endBtn.style.display = "none";
+        restartBtn.style.display = "inline-block";
+
+        // 显示所有元素
+        elements.forEach((el) => {
+          const cell = document.getElementById(`element-${el.num}`);
+          if (cell) cell.classList.add("revealed");
+        });
+
+        // 提示最终结果
+        const correctNum = correctElements.length;
+        const accuracy = ((correctNum / totalCount) * 100).toFixed(1);
+        message.innerHTML = `<span style="color:#3498db">📊 挑战结束！共答对${correctNum}个元素，正确率${accuracy}%</span>`;
+      }
+
+      // ********** 7. 重新开始挑战 **********
+      function restartQuiz() {
+        // 重置全局变量
+        correctElements = [];
+        // 启用输入
+        inputBox.disabled = false;
+        inputBox.value = "";
+        inputBox.focus();
+        // 重置按钮显示
+        endBtn.style.display = "inline-block";
+        restartBtn.style.display = "none";
+        // 重置提示
+        message.innerHTML = "";
+        // 重新初始化周期表
+        initPeriodicTable();
+      }
+
+      // ********** 8. 绑定事件 **********
+      // 回车提交答案
+      inputBox.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") checkAnswer();
+      });
+      // 页面加载初始化
+      window.onload = () => {
+        initPeriodicTable();
+        inputBox.focus();
+      };
+    </script>
+  </body>
+</html>
