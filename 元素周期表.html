@@ -19,6 +19,7 @@
         --unknown: #bdc3c7; /* 未知类型-浅灰 */
         --border: #ddd;
         --hidden-bg: #f0f0f0; /* 未答背景 */
+        --incorrect-border: #e74c3c; /* 未答红色边框 */
       }
 
       * {
@@ -276,6 +277,13 @@
       .element-cell.revealed.unknown {
         background: var(--unknown);
         color: #333;
+      }
+
+      /* 新增：未答元素结束时的红色边框样式 */
+      .element-cell.incorrect {
+        border-color: var(--incorrect-border) !important;
+        border-width: 2px !important;
+        box-shadow: 0 0 8px rgba(231, 76, 60, 0.4) !important;
       }
 
       /* 单元格内容：原子序数始终显示，符号+中文答对后显示 */
@@ -1649,16 +1657,23 @@
         endBtn.style.display = "none";
         restartBtn.style.display = "inline-block";
 
-        // 显示所有元素
+        // 显示所有元素，并为未答元素添加红色边框
         elements.forEach((el) => {
           const cell = document.getElementById(`element-${el.num}`);
-          if (cell) cell.classList.add("revealed");
+          if (cell) {
+            cell.classList.add("revealed");
+            // 如果该元素未答对，添加红色边框
+            if (!correctElements.includes(el.num)) {
+              cell.classList.add("incorrect");
+            }
+          }
         });
 
         // 提示最终结果
         const correctNum = correctElements.length;
         const accuracy = ((correctNum / totalCount) * 100).toFixed(1);
-        message.innerHTML = `<span style="color:#3498db">📊 挑战结束！共答对${correctNum}个元素，正确率${accuracy}%</span>`;
+        const incorrectNum = totalCount - correctNum;
+        message.innerHTML = `<span style="color:#3498db">📊 挑战结束！共答对${correctNum}个元素，有${incorrectNum}个未答出（红色边框），正确率${accuracy}%</span>`;
       }
 
       // ********** 7. 重新开始挑战 **********
