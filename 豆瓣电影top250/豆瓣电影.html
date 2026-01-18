@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -565,10 +565,15 @@
         {
           rank: 44,
           mainName: "摔跤吧！爸爸",
-          otherNames: ["Dangal", "我和我的冠军女儿", "打死不离3父女"],
+          otherNames: [
+            "Dangal",
+            "我和我的冠军女儿",
+            "打死不离3父女",
+            "摔跤吧爸爸",
+          ],
           director: "涅提·蒂瓦里 Nitesh Tiwari",
           quote:
-            "你不是在为你一个人战斗，你要让千千万万的女性看到女生并不是只能相夫教子。。",
+            "你不是在为你一个人战斗，你要让千千万万的女性看到女生并不是只能相夫教子。",
         },
         {
           rank: 45,
@@ -1081,7 +1086,7 @@
 
           // 检查所有名称
           const allPossibleNames = [movie.mainName, ...movie.otherNames].map(
-            (n) => n.toLowerCase()
+            (n) => n.toLowerCase(),
           );
 
           if (allPossibleNames.includes(val)) {
