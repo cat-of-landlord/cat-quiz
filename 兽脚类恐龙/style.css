@@ -1,0 +1,396 @@
+:root {
+  --dino-gold: #c9a063;
+  --bg-dark: #1a1a1a;
+  --card-bg: #2d2d2d;
+  --text-light: #e0e0e0;
+  --missed-red: #ff4d4f;
+  --link-grey: #444;
+  --triassic: #ff4d4d;
+  --jurassic: #27ae60;
+  --cretaceous: #3498db;
+}
+
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  margin: 0;
+  padding-top: 100px; /* Header高度调整 */
+}
+
+/* --- Header 布局优化 --- */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(30, 30, 30, 0.98);
+  border-bottom: 2px solid var(--dino-gold);
+  z-index: 1000;
+  padding: 10px 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.header-content {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.stats-box {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: #888;
+}
+.stats-box b {
+  color: var(--dino-gold);
+  font-size: 14px;
+}
+
+.search-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+#dino-input {
+  width: 100%;
+  background: #111;
+  border: 1px solid #444;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 15px;
+  outline: none;
+  transition: border 0.3s;
+}
+#dino-input:focus {
+  border-color: var(--dino-gold);
+}
+
+/* --- 按钮样式 --- */
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  font-weight: bold;
+  font-size: 13px;
+  transition: 0.2s;
+  text-decoration: none; /* For link buttons */
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 需求4: 返回首页按钮样式 */
+.btn-home {
+  background: transparent;
+  color: #aaa;
+  border: 1px solid #444;
+}
+.btn-home:hover {
+  border-color: #fff;
+  color: #fff;
+}
+
+.btn-tree {
+  background: #2e7d32;
+  color: white;
+}
+.btn-tree:hover {
+  background: #388e3c;
+}
+
+.btn-end {
+  background: #666;
+  color: white;
+}
+.btn-end:hover {
+  background: var(--missed-red);
+}
+
+.btn-restart {
+  background: var(--dino-gold);
+  color: #1a1a1a;
+}
+
+/* --- 需求1: 模态框 (Modal) 样式 --- */
+.modal-overlay {
+  display: none; /* 默认隐藏 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+}
+.modal-overlay.open {
+  display: flex;
+}
+
+.modal-content {
+  background: #1a1a1a;
+  width: 90%;
+  max-width: 1400px;
+  height: 80vh;
+  border-radius: 12px;
+  border: 1px solid #444;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+}
+
+.modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #222;
+  border-radius: 12px 12px 0 0;
+  flex-shrink: 0;
+}
+.modal-header h3 {
+  margin: 0;
+  color: var(--dino-gold);
+  font-size: 16px;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+}
+.btn-close:hover {
+  color: #fff;
+}
+
+/* --- 演化树容器 (滚动区域) --- */
+#tree-container {
+  flex: 1;
+  width: 100%;
+  /* 修复：允许竖向和横向滚动 */
+  overflow: auto;
+  background: #151515;
+  border-radius: 0 0 12px 12px;
+  position: relative;
+
+  /* 美化滚动条 */
+  scrollbar-width: thin;
+  scrollbar-color: var(--dino-gold) #333;
+}
+
+/* Webkit 滚动条 */
+#tree-container::-webkit-scrollbar {
+  width: 12px; /* 增加竖向滚动条宽度 */
+  height: 12px; /* 横向滚动条高度 */
+}
+#tree-container::-webkit-scrollbar-track {
+  background: #222;
+}
+#tree-container::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 6px;
+  border: 2px solid #222;
+}
+#tree-container::-webkit-scrollbar-thumb:hover {
+  background-color: var(--dino-gold);
+}
+
+/* --- D3 节点样式 (保持不变) --- */
+.node circle {
+  fill: #333;
+  stroke: #555;
+  stroke-width: 2px;
+  transition: all 0.5s;
+}
+.node text {
+  font: 12px sans-serif;
+  fill: #666;
+  transition: opacity 0.8s;
+}
+.node-leaf text {
+  opacity: 0;
+  cursor: default;
+}
+.node-leaf.active text {
+  opacity: 1;
+}
+.link {
+  fill: none;
+  stroke: var(--link-grey);
+  stroke-width: 1.5px;
+  transition: all 0.5s;
+}
+.node.active circle {
+  fill: var(--dino-gold);
+  stroke: #fff;
+  r: 6;
+}
+.node.active text {
+  fill: #fff;
+  font-weight: bold;
+}
+.link.active {
+  stroke: var(--dino-gold);
+  stroke-width: 2px;
+  opacity: 0.8;
+}
+
+/* 进度条样式 */
+.progress-bar-bg {
+  fill: #333;
+  rx: 2;
+}
+.progress-bar-fill {
+  fill: var(--dino-gold);
+  rx: 2;
+  transition: width 0.5s;
+}
+.progress-text {
+  font-size: 9px;
+  fill: #555;
+  font-family: monospace;
+}
+.node.active .progress-text {
+  fill: var(--dino-gold);
+}
+
+/* --- 卡片样式 (保持不变，省略部分以节省篇幅，请保留原有的 .container, .dino-card 等样式) --- */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+/* ... 确保保留原来的 .dino-card, .locked, .solved 等样式 ... */
+.dino-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 15px;
+  position: relative;
+  border: 1px solid #3d3d3d;
+  transition: all 0.3s ease;
+}
+.dino-card.locked {
+  opacity: 0.6;
+}
+.dino-card.solved {
+  border-color: var(--dino-gold);
+  opacity: 1;
+  box-shadow: 0 0 15px rgba(201, 160, 99, 0.1);
+}
+.dino-card.missed {
+  border-color: var(--missed-red);
+  opacity: 1;
+}
+.dino-card.missed .dino-name {
+  color: var(--missed-red);
+}
+.taxonomy-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #444;
+  color: #bbb;
+}
+.solved .tag {
+  background: #554422;
+  color: var(--dino-gold);
+}
+.dino-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.dino-name {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 5px 0;
+}
+.dino-latin {
+  font-size: 12px;
+  font-style: italic;
+  color: #888;
+  margin-bottom: 10px;
+}
+.locked .dino-name,
+.locked .dino-latin {
+  visibility: hidden;
+}
+.solved .dino-name,
+.missed .dino-name,
+.solved .dino-latin,
+.missed .dino-latin {
+  visibility: visible;
+}
+.clues {
+  font-size: 13px;
+  color: #aaa;
+}
+.period-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+.dino-img-box {
+  width: 120px;
+  height: 100px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.dino-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.solved .dino-photo,
+.missed .dino-photo {
+  opacity: 1;
+}
+.hidden-placeholder {
+  position: absolute;
+  top: 45px;
+  left: 15px;
+  color: #444;
+  font-family: monospace;
+}
+.solved .hidden-placeholder,
+.missed .hidden-placeholder {
+  display: none;
+}

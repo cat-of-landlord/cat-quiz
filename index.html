@@ -161,6 +161,30 @@
       .btn-movie {
         background: linear-gradient(135deg, #9c27b0, #ce93d8);
       }
+      /* 古生物分类的配色 - 采用大地色或深绿色系 */
+      .cat-paleo h2 {
+        color: #8b4513; /* 棕褐色 */
+        border-left: 5px solid #8b4513;
+        padding-left: 15px;
+      }
+
+      .btn-paleo {
+        background: linear-gradient(135deg, #a0522d 0%, #8b4513 100%);
+        color: white !important;
+        text-decoration: none;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        transition: transform 0.2s;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .btn-paleo:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(139, 69, 19, 0.3);
+      }
 
       .instructions {
         background: #f8f9fa;
@@ -224,6 +248,17 @@
           <a class="btn btn-cat" href="猫科动物.html"
             >你能认出所有猫科动物吗（图片）</a
           >
+        </div>
+      </div>
+      <div class="category cat-paleo">
+        <h2>🦖 古生物与自然</h2>
+        <div class="btn-grid">
+          <a class="btn btn-paleo" href="兽脚类恐龙/兽脚类恐龙.html">
+            你能认出多少种兽脚类恐龙？<br />
+            <span style="font-size: 11px; opacity: 0.8"
+              >（暂时只包括暴龙超科）</span
+            >
+          </a>
         </div>
       </div>
 

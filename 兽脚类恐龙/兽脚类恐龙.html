@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>兽脚亚目演化挑战 - Theropoda Quiz</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-content">
+        <div class="nav-left">
+          <a href="../index.html" class="btn btn-home">← 返回首页</a>
+          
+          <div class="stats-box">
+             <div class="stat-item">进度: <b id="score">0</b> / <span id="total">0</span></div>
+             <div class="stat-item">时间: <b id="timer">00:00</b></div>
+          </div>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="dino-input" placeholder="输入恐龙名称..." autocomplete="off" />
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-tree" onclick="toggleTreeModal(true)">查看演化树 🌿</button>
+          <button class="btn btn-end" onclick="endGame()">交卷</button>
+          <button class="btn btn-restart" onclick="restartGame()">重置</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="tree-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>暴龙超科演化谱系 (可横向拖动)</h3>
+                <button class="btn-close" onclick="toggleTreeModal(false)">×</button>
+            </div>
+            <div id="tree-container"></div>
+        </div>
+    </div>
+
+    <div class="container" id="dino-grid"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
